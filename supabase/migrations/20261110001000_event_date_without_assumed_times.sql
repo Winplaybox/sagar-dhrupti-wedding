@@ -1,0 +1,2 @@
+alter table public.events add column if not exists event_date date;
+update public.events set event_date = date '2027-02-02', starts_at = null, ends_at = null where slug in ('wedding-ceremony','reception');
