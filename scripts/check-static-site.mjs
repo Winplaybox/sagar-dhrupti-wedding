@@ -9,18 +9,18 @@ try {
   execFileSync('unzip', ['-q', 'wedding-site-source.zip', '-d', unpackDir]);
   for (const file of ['index.html', 'admin.html']) {
     const html = readFileSync(join(unpackDir, file), 'utf8');
-    if (!html.toLowerCase().includes('<!doctype html>')) throw new Error(\`\${file}: missing HTML doctype\`);
+    if (!html.toLowerCase().includes('<!doctype html>')) throw new Error(file + ': missing HTML doctype');
     const scripts = [...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)]
       .map((match) => match[1])
       .filter((source) => source.trim());
     for (const [index, source] of scripts.entries()) {
-      new Script(source, { filename: \`\${file}#inline-\${index + 1}\` });
+      new Script(source, { filename: file + '#inline-' + (index + 1) });
     }
-    console.log(\`Validated \${file}: \${scripts.length} inline script(s)\`);
+    console.log('Validated ' + file + ': ' + scripts.length + ' inline script(s)');
   }
   const publicHtml = readFileSync(join(unpackDir, 'index.html'), 'utf8');
   for (const required of ['name="whatsapp_consent"', 'name="email"', 'name="dietary_notes"', 'submit-rsvp']) {
-    if (!publicHtml.includes(required)) throw new Error(\`index.html: missing \${required}\`);
+    if (!publicHtml.includes(required)) throw new Error('index.html: missing ' + required);
   }
   const vercel = JSON.parse(readFileSync('vercel.json', 'utf8'));
   if (vercel.outputDirectory !== 'dist' || !vercel.buildCommand.includes('wedding-site-source.zip')) {
