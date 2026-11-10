@@ -1,22 +1,23 @@
 # Sagar & Dhrupti Wedding Website
 
-A multilingual Gujarati wedding website and private administration dashboard.
+The production website is the multilingual static invitation and private admin console supplied in `wedding-site-source.zip`. Vercel extracts the two HTML entry points into `dist/` and serves that static output. The original Next.js implementation remains in the repository as a development/build baseline and continues to be checked by GitHub Actions.
 
-## Stack
-- Next.js App Router, React, TypeScript
-- Supabase PostgreSQL, Auth, Storage and Row Level Security
-- Vercel deployment target
+## Production website
 
-## Project status
-The Supabase project is provisioned in `ap-south-1`. The initial database migration is applied. Application implementation is in progress.
+- `wedding-site-source.zip` contains `index.html` and `admin.html` for the public invitation and admin console.
+- Public invitation: Gujarati, Hindi, English and Marathi; countdown, events, venue, gallery and RSVP.
+- Admin console: events, guest lists/invite links, RSVP records and CSV export, settings, gallery, content pages and role-managed admins.
+- Supabase Edge Function: existing `submit-rsvp` endpoint.
+- Vercel build: extracts the archive into `dist/`; `/admin` rewrites to the admin page.
 
-## Required environment variables
-Copy `.env.example` to `.env.local` and fill in the Supabase project URL and anon key. Never commit service-role keys or OAuth secrets.
+## Local development and validation
 
-## Local development
 ```bash
 npm install
 npm run dev
+node scripts/check-static-site.mjs
 ```
 
-See `docs/` for architecture, security and setup notes.
+To update the production site, update the two HTML files, rebuild `wedding-site-source.zip` with those files at the archive root, and commit the archive. The CI verifier parses the inline JavaScript and checks required RSVP fields and Vercel routing.
+
+See [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for hosting, Supabase and first-admin setup. Never commit Supabase service-role keys or other secrets. The Supabase publishable key embedded in the static site is browser-safe by design.

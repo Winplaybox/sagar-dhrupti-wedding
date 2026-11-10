@@ -1,0 +1,13 @@
+{
+  "framework": null,
+  "installCommand": "echo 'Static production site: no npm install required'",
+  "buildCommand": "rm -rf dist && mkdir -p dist && unzip -o wedding-site-source.zip -d dist",
+  "outputDirectory": "dist",
+  "cleanUrls": true,
+  "rewrites": [
+    {
+      "source": "/admin",
+      "destination": "/admin.html"
+    }
+  ]
+}
