@@ -1,0 +1,44 @@
+/* Shared layout safety for the public invitation and the admin console. */
+html {
+  width: 100%;
+  min-width: 320px;
+  max-width: 100%;
+  overflow-x: clip;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  scroll-padding-top: 1rem;
+}
+
+body {
+  width: 100%;
+  min-width: 320px;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+img, svg, video, canvas, iframe {
+  max-width: 100%;
+}
+
+button, input, select, textarea {
+  max-width: 100%;
+  min-width: 0;
+}
+
+button, a, input, select, textarea, summary {
+  touch-action: manipulation;
+}
+
+:where(button, input, select, textarea, a, summary):focus-visible {
+  outline: 3px solid #d99a20;
+  outline-offset: 2px;
+}
+
+/* Keep the large decorative mandala centered without widening the page. */
+.mand {
+  width: min(100vw, 1000px);
+  margin: calc(min
