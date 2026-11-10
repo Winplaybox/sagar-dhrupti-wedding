@@ -1,0 +1,60 @@
+ {
+    flex: 0 1 auto;
+  }
+
+  #nav {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 8.5rem), 1fr));
+    gap: .4rem;
+    padding: .6rem;
+  }
+
+  #nav button {
+    width: 100%;
+  }
+
+  #main {
+    margin: .75rem auto;
+    padding-inline: .75rem;
+  }
+
+  #main details {
+    padding: .65rem;
+  }
+
+  #main .row {
+    flex-wrap: wrap;
+  }
+
+  #main .row > button,
+  #main .row > a {
+    flex: 1 1 9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  html {
+    scroll-padding-top: .5rem;
+  }
+
+  .lang {
+    left: .4rem;
+    right: .4rem;
+    width: max-content;
+    max-width: calc(100vw - .8rem);
+    margin-inline: auto;
+  }
+
+  .lang button {
+    min-height: 34px;
+    padding-inline: clamp(.2rem, 1.2vw, .4rem);
+  }
+
+  .names {
+    font-size: clamp(2rem, 10vw, 3.2rem);
+    line-height: 1.08;
+  }
+
+  .when {
+    font-size: 1rem;
+  }
