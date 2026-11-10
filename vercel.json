@@ -1,7 +1,7 @@
 {
   "framework": null,
   "installCommand": "echo 'Static production site: no npm install required'",
-  "buildCommand": "rm -rf dist && mkdir -p dist && unzip -o wedding-site-source.zip -d dist",
+  "buildCommand": "rm -rf dist && mkdir -p dist && unzip -o wedding-site-source.zip -d dist && node scripts/apply-responsive-fixes.mjs",
   "outputDirectory": "dist",
   "cleanUrls": true,
   "rewrites": [
