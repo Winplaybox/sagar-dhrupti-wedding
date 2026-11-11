@@ -1,0 +1,49 @@
+;
+  min-width: 0;
+  padding: clamp(3.5rem, 8vw, 6rem) clamp(1rem, 4vw, 1.5rem);
+  scroll-margin-top: 1rem;
+}
+
+.wrap {
+  width: min(100%, 720px);
+  min-width: 0;
+}
+
+.lang {
+  top: max(.4rem, env(safe-area-inset-top));
+  right: max(.4rem, env(safe-area-inset-right));
+  max-width: calc(100vw - .8rem);
+  gap: clamp(.05rem, .6vw, .3rem);
+  padding: .25rem;
+}
+
+.lang button {
+  min-height: 36px;
+  padding: .25rem clamp(.25rem, 1.5vw, .7rem);
+  font-size: clamp(.68rem, 2.7vw, .95rem);
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.cd {
+  width: 100%;
+  max-width: 100%;
+  gap: clamp(.4rem, 2vw, 1rem);
+}
+
+.cd div {
+  flex: 1 1 68px;
+  min-width: 0;
+  max-width: 112px;
+  padding: clamp(.65rem, 3vw, 1.2rem) .35rem;
+}
+
+.cd b {
+  font-size: clamp(1.55rem, 7vw, 2.6rem);
+}
+
+.ev {
+  width: 100%;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  padding: clamp(

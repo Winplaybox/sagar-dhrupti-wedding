@@ -23,13 +23,14 @@ try {
     if (!publicHtml.includes(required)) throw new Error('index.html: missing ' + required);
   }
   const vercel = JSON.parse(readFileSync('vercel.json', 'utf8'));
-  if (vercel.outputDirectory !== 'dist' || !vercel.buildCommand.includes('wedding-site-source.zip')) {
+  if (vercel.outputDirectory !== 'dist' || !vercel.buildCommand.includes('wedding-site-source.zip') || !vercel.buildCommand.includes('scripts/apply-responsive-fixes.mjs')) {
     throw new Error('vercel.json: static ZIP build configuration is missing');
   }
   if (!vercel.rewrites?.some((rule) => rule.source === '/admin' && rule.destination === '/admin.html')) {
     throw new Error('vercel.json: missing /admin rewrite');
   }
-  console.log('Static site archive, RSVP fields and Vercel configuration are valid.');
+  execFileSync(process.execPath, ['scripts/check-responsive.mjs']);
+  console.log('Static archive, RSVP fields, responsive layout and Vercel configuration are valid.');
 } finally {
   rmSync(unpackDir, { recursive: true, force: true });
 }

@@ -1,0 +1,77 @@
+;
+  min-height: 1.2rem;
+}
+
+#msg {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+/* Admin console */
+#login {
+  width: min(340px, calc(100% - 2rem));
+  max-width: 100%;
+}
+
+#app {
+  width: 100%;
+  min-width: 0;
+}
+
+#app > header,
+#nav,
+#main {
+  width: 100%;
+  min-width: 0;
+}
+
+#app > header {
+  flex-wrap: wrap;
+}
+
+#app > header b {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+#nav {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+#nav button,
+#app button {
+  min-height: 42px;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+#main {
+  max-width: 900px;
+}
+
+#main details,
+#main summary {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+#main label {
+  min-width: 0;
+}
+
+#main input,
+#main textarea,
+#main select {
+  width: 100%;
+  min-width: 0;
+  font-size: 16px;
+}
+
+#main .row {
+  min-width: 0;
+  align-items: stretch;
+}
+
+#main .row 
