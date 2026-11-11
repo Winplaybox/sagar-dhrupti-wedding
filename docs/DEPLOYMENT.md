@@ -8,13 +8,15 @@ Supabase dashboard → **SQL Editor** → run each file, top to bottom:
 
 1. `supabase/migrations/20261112000000_refs_and_google_admins.sql`
 2. `supabase/migrations/20261113000000_family_referrers_roles_sections.sql`
+3. `supabase/migrations/20261114000000_side_onboarding.sql`
 
-Both are safe to run again. Together they add:
+All are safe to run again. Together they add:
 - `members`: who can sign in (super_admin / admin / user), their side, relation and WhatsApp
 - `referrers`: one invite link per family member (`?ref=code`), owner, side, WhatsApp; `sags` and `drups` are created
 - `rsvps.referrer_id` / `guests.referrer_id`: who invited each guest
 - `events.audience` (both / groom / bride) and the groom-side Vastu (25 Dec 2026) and Haldi (1 Feb 2027) events
 - `site_sections`: custom sections on the invitation
+- first sign-in onboarding: people without a side choose groom / bride, relation and WhatsApp; their link is created as `groom-mother`, `bride-brother-2`, …
 - `claim_access()`, `get_referrer()`, `submit_rsvp_v2()`, `update_my_member()` and Row Level Security for every role
 
 Then add the first people (emails are kept out of Git on purpose):

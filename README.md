@@ -19,9 +19,9 @@ Every family member gets their own link: `/?ref=CODE`. The code decides
 
 | Link | Side | Replies go to |
 | --- | --- | --- |
-| `/` or `/?ref=sags` | Groom | +91 73873 22548 |
-| `/?ref=drups` | Bride | +91 88284 76929 |
-| `/?ref=<code>` | Set per link | That person's WhatsApp |
+| `/`, `/?ref=sags` or `/?ref=groom` | Groom | +91 73873 22548 |
+| `/?ref=drups` or `/?ref=bride` | Bride | +91 88284 76929 |
+| `/?ref=groom-mother`, `/?ref=bride-brother` … | Set per link | That person's WhatsApp |
 
 Extra options: `&to=Ramesh%20Kaka` greets a guest by name, `&c=CODE` uses a guest invite code, `&lang=gu|hi|mr|en` picks the language.
 

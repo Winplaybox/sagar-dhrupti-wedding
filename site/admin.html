@@ -270,6 +270,7 @@ async function boot(session) {
   $('me-name').textContent = member?.display_name || me.display_name || user.email;
   $('me-role').textContent = ROLE[me.role] + (member?.side ? ' · ' + SIDE[member.side] : '');
   $('brand-sub').textContent = isAdmin() ? 'Wedding admin' : 'My invitations';
+  if (member && !member.side && sessionStorage.getItem('skipSide') !== '1') return onboarding();
   show();
 }
 S.auth.onAuthStateChange((event, session) => {
@@ -288,6 +289,47 @@ async function loadContext() {
   member = mm.data || null;
   referrers = rf.error ? Object.entries(C.refs).map(([code, r]) => ({ id: null, code, ...r, is_active: true, _fallback: true })) : (rf.data || []);
   eventsCache = ev.data || [];
+}
+
+/* ───────── First sign-in: which side? ───────── */
+function onboarding() {
+  renderNav(); $('nav').hidden = true;
+  const m = $('main');
+  m.innerHTML = `<div class="card" style="max-width:620px;margin:6vh auto 0">
+    <div class="seal" aria-hidden="true" style="width:64px;height:64px;font-size:1.2rem;margin:0 0 1rem">S&amp;D</div>
+    <h1 class="display" style="font-size:1.9rem;color:var(--night)">Welcome${member.display_name ? ', ' + esc(member.display_name.split(' ')[0]) : ''}!</h1>
+    <p class="sub" style="font-size:1rem">Before you start: which side of the family are you from? Guests you invite will see this, and they'll see that side's functions.</p>
+    <div class="row" role="radiogroup" aria-label="Side" id="ob-side" style="margin:1rem 0 1.2rem">
+      <button type="button" class="btn sec" data-side="groom" role="radio" aria-checked="false" style="flex:1;min-height:64px;font-size:1.05rem">🤵 Groom's side (Sagar)</button>
+      <button type="button" class="btn sec" data-side="bride" role="radio" aria-checked="false" style="flex:1;min-height:64px;font-size:1.05rem">👰 Bride's side (Dhrupti)</button>
+    </div>
+    <div class="form-grid">
+      <label class="f">Your name (guests see “Invited by …”)<input id="ob-name" value="${esc(member.display_name || me.display_name || '')}" maxlength="80"></label>
+      <label class="f">Relation to ${'the couple'}<select id="ob-rel">${opts([['', 'Choose…'], ...RELATIONS.filter(r => !['groom', 'bride'].includes(r[0]) || isAdmin())], member.relation || '')}</select></label>
+      <label class="f" style="grid-column:1/-1">Your WhatsApp (RSVPs from your guests come here)<input id="ob-wa" inputmode="tel" value="${esc(member.whatsapp || '')}" placeholder="98xxxxxxxx or 9198xxxxxxxx"></label>
+    </div>
+    <div class="row" style="margin-top:1.2rem"><button class="btn" id="ob-go" type="button" style="min-height:48px;padding:0 1.6rem">Continue</button>${isAdmin() ? '<button class="btn sec" id="ob-skip" type="button">Skip for now</button>' : ''}<span class="spacer"></span></div>
+    <p class="sub" id="ob-err" role="alert" style="color:var(--sindoor);margin:.8rem 0 0"></p></div>`;
+  let side = '';
+  m.querySelectorAll('[data-side]').forEach(b => b.onclick = () => {
+    side = b.dataset.side;
+    m.querySelectorAll('[data-side]').forEach(x => { const on = x === b; x.className = 'btn ' + (on ? '' : 'sec'); x.setAttribute('aria-checked', on) });
+  });
+  if ($('ob-skip')) $('ob-skip').onclick = () => { sessionStorage.setItem('skipSide', '1'); $('nav').hidden = false; show() };
+  $('ob-go').onclick = async e => {
+    const err = $('ob-err'); err.textContent = '';
+    const wa = phoneIntl($('ob-wa').value);
+    if (!side) return err.textContent = 'Choose Groom’s side or Bride’s side.';
+    if (!$('ob-name').value.trim()) return err.textContent = 'Add your name so guests know who invited them.';
+    if (!/^[0-9]{11,15}$/.test(wa)) return err.textContent = 'Add your WhatsApp number (10 digits, or with country code).';
+    e.target.disabled = true;
+    const { data, error } = await S.rpc('complete_my_onboarding', { p_side: side, p_relation: $('ob-rel').value || null, p_display_name: $('ob-name').value.trim(), p_whatsapp: wa });
+    e.target.disabled = false;
+    if (error) return err.textContent = missing(error) ? 'The database update for this step is pending. Ask the admin to run the latest migration.' : error.message;
+    await loadContext(); $('nav').hidden = false;
+    $('me-name').textContent = member?.display_name || user.email; $('me-role').textContent = ROLE[me.role] + ' · ' + SIDE[side];
+    toast(data ? `You're set! Your invite link: ?ref=${data}` : 'Saved'); tab = 'overview'; show();
+  };
 }
 
 /* ───────── shell ───────── */
@@ -319,6 +361,12 @@ function statsByRef(rsvps) {
   return out;
 }
 const myRefs = () => referrers.filter(r => r.owner_user_id && r.owner_user_id === user.id);
+function codeFor(side, relation, except) {
+  const base = slug((side || 'groom') + '-' + (relation || 'family')).slice(0, 28);
+  let code = base, n = 1;
+  while (['groom', 'bride'].includes(code) || referrers.some(f => f.code === code && f.id !== except)) code = base + '-' + (++n);
+  return code;
+}
 
 /* ───────── generic CRUD ───────── */
 const toLocal = v => v ? new Date(new Date(v).getTime() + 330 * 6e4).toISOString().slice(0, 16) : '';
@@ -413,7 +461,7 @@ const VIEWS = {
     const ownerOpts = [['', 'Nobody (managed by admins)'], ...(mem || []).map(x => [x.email, (x.display_name ? x.display_name + ' · ' : '') + x.email])];
     const form = (r) => `<div class="form-grid" style="margin-top:.6rem">
       <label class="f">Name guests will see<input data-f="display_name" value="${esc(r?.display_name ?? (r ? '' : (myRefs().length ? '' : member?.display_name || '')))}" placeholder="e.g. Sagar's Mummy" maxlength="80"><small class="sub" style="margin:0;font-weight:400">Shown as “Invited by …”</small></label>
-      <label class="f">Link code<input data-f="code" value="${esc(r?.code)}" placeholder="auto from name" maxlength="32" ${r && ['sags', 'drups'].includes(r.code) ? 'readonly' : ''}><small class="sub" style="margin:0;font-weight:400">Small letters, numbers, - only</small></label>
+      <label class="f">Link code<input data-f="code" value="${esc(r?.code)}" placeholder="e.g. groom-mother" maxlength="32" ${r && ['sags', 'drups'].includes(r.code) ? 'readonly' : ''}><small class="sub" style="margin:0;font-weight:400">Small letters, numbers, - only</small></label>
       <label class="f">Relation<select data-f="relation">${opts([['', '—'], ...RELATIONS], r?.relation ?? (r ? '' : member?.relation))}</select></label>
       ${isAdmin() ? `<label class="f">Side<select data-f="side">${opts([['groom', "Groom's side"], ['bride', "Bride's side"]], r?.side || mySide)}</select></label>` : `<label class="f">Side<input value="${esc(SIDE[mySide])}" readonly></label>`}
       <label class="f">WhatsApp for replies<input data-f="whatsapp" inputmode="tel" value="${esc(r?.whatsapp ?? (member?.whatsapp || ''))}" placeholder="919876543210"><small class="sub" style="margin:0;font-weight:400">With country code (91…)</small></label>
@@ -429,11 +477,14 @@ const VIEWS = {
     m.querySelectorAll('details.item').forEach(d => {
       const g = k => d.querySelector(`[data-f="${k}"]`);
       const nameEl = g('display_name'), codeEl = g('code');
-      if (!d.dataset.id) nameEl.oninput = () => { if (!codeEl.dataset.touched) codeEl.value = slug(nameEl.value) }; codeEl.oninput = () => codeEl.dataset.touched = 1;
+      const autoCode = () => { if (!d.dataset.id && !codeEl.dataset.touched) codeEl.value = codeFor(isAdmin() ? g('side').value : mySide, g('relation').value) };
+      codeEl.oninput = () => codeEl.dataset.touched = 1;
+      g('relation').addEventListener('change', autoCode); if (isAdmin()) g('side').addEventListener('change', autoCode); autoCode();
       d.querySelector('[data-save]').onclick = async e => {
-        const o = { display_name: nameEl.value.trim(), code: C.normalizeCode(codeEl.value || slug(nameEl.value)), relation: g('relation').value || null, whatsapp: phoneIntl(g('whatsapp').value), is_active: g('is_active').checked, side: isAdmin() ? g('side').value : mySide, updated_at: new Date().toISOString() };
+        const o = { display_name: nameEl.value.trim(), code: C.normalizeCode(codeEl.value) || codeFor(isAdmin() ? g('side').value : mySide, g('relation').value, d.dataset.id), relation: g('relation').value || null, whatsapp: phoneIntl(g('whatsapp').value), is_active: g('is_active').checked, side: isAdmin() ? g('side').value : mySide, updated_at: new Date().toISOString() };
         if (!o.display_name) return toast('Add the name guests will see', 1);
         if (o.code.length < 2) return toast('Link code needs at least 2 letters', 1);
+        if (['groom', 'bride'].includes(o.code)) return toast('“groom” and “bride” are reserved for Sagar’s and Dhrupti’s own links. Try groom-mother, bride-brother…', 1);
         if (!/^[0-9]{11,15}$/.test(o.whatsapp)) return toast('Add a WhatsApp number with country code, e.g. 919876543210', 1);
         if (isAdmin()) { o.owner_email = g('owner_email').value || null; const mm = (mem || []).find(x => x.email === o.owner_email); o.owner_user_id = mm?.user_id || null }
         const id = d.dataset.id; e.target.disabled = true;
@@ -579,13 +630,13 @@ const VIEWS = {
       <label class="f">Google email<input data-p="email" type="email" value="${esc(x?.email)}" ${x ? 'readonly' : ''} placeholder="name@gmail.com"></label>
       <label class="f">Name<input data-p="display_name" value="${esc(x?.display_name)}" placeholder="e.g. Sagar's Mummy"></label>
       <label class="f">Access<select data-p="role">${opts(roles, x?.role || 'user')}</select></label>
-      <label class="f">Side<select data-p="side">${opts([['groom', "Groom's side"], ['bride', "Bride's side"]], x?.side || 'groom')}</select></label>
+      <label class="f">Side<select data-p="side">${opts([['', 'Let them choose at first sign-in'], ['groom', "Groom's side"], ['bride', "Bride's side"]], x ? (x.side || '') : '')}</select></label>
       <label class="f">Relation<select data-p="relation">${opts([['', '—'], ...RELATIONS], x?.relation || '')}</select></label>
       <label class="f">WhatsApp<input data-p="whatsapp" inputmode="tel" value="${esc(x?.whatsapp)}" placeholder="919876543210"></label>
-      ${x ? '' : `<label class="check" style="grid-column:1/-1"><input type="checkbox" data-p="mklink" checked>Also create their invite link (replies go to this WhatsApp)</label>`}</div>`;
+      ${x ? '' : `<label class="check" style="grid-column:1/-1"><input type="checkbox" data-p="mklink" checked>Also create their invite link now (needs side + WhatsApp; otherwise it's made when they sign in)</label>`}</div>`;
     m.innerHTML = head('People & access', isSuper() ? 'Add family members, admins and super admins by Google email.' : 'Add family members by Google email. They can sign in, make invite links and see their RSVPs.') +
       `<details class="item" data-email="" open><summary>＋ Add person</summary>${form(null)}<div class="row" style="margin-top:.8rem"><button class="btn" data-save type="button">Give access</button></div></details>
-      <div class="list" style="margin-top:1rem">${data.map(x => `<details class="item" data-email="${esc(x.email)}"><summary>${esc(x.display_name || x.email)}<span class="pill ${x.role === 'user' ? '' : 'bride'}">${ROLE[x.role]}</span>${x.side ? `<span class="pill ${x.side}">${SIDE[x.side]}</span>` : ''}${x.relation ? `<span class="pill">${esc(relLabel(x.relation))}</span>` : ''}<span class="pill ${x.user_id ? 'attending' : 'maybe'}">${x.user_id ? 'Signed in' : 'Not signed in yet'}</span></summary>
+      <div class="list" style="margin-top:1rem">${data.map(x => `<details class="item" data-email="${esc(x.email)}"><summary>${esc(x.display_name || x.email)}<span class="pill ${x.role === 'user' ? '' : 'bride'}">${ROLE[x.role]}</span>${x.side ? `<span class="pill ${x.side}">${SIDE[x.side]}</span>` : '<span class="pill maybe">Side not chosen</span>'}${x.relation ? `<span class="pill">${esc(relLabel(x.relation))}</span>` : ''}<span class="pill ${x.user_id ? 'attending' : 'maybe'}">${x.user_id ? 'Signed in' : 'Not signed in yet'}</span></summary>
         <div class="meta">${esc(x.email)} · invite links: ${referrers.filter(f => f.owner_email === x.email || (x.user_id && f.owner_user_id === x.user_id)).map(f => esc(f.code)).join(', ') || 'none'}</div>
         ${canEdit(x) && x.email !== (user.email || '').toLowerCase() ? form(x) + `<div class="row" style="margin-top:.8rem"><button class="btn" data-save type="button">Save</button><button class="btn danger" data-rm type="button">Remove access</button></div>` : `<p class="sub">${x.email === (user.email || '').toLowerCase() ? 'This is you. Edit your details under My profile.' : 'Only a super admin can change this person.'}</p>`}</details>`).join('')}</div>`;
     m.querySelectorAll('details.item[data-email]').forEach(d => {
@@ -593,17 +644,15 @@ const VIEWS = {
       const save = d.querySelector('[data-save]'); if (!save) return;
       save.onclick = async e => {
         const editing = d.dataset.email;
-        const o = { email: (editing || g('email').value).trim().toLowerCase(), display_name: g('display_name').value.trim() || null, role: g('role').value, side: g('side').value, relation: g('relation').value || null, whatsapp: digits(g('whatsapp').value) ? phoneIntl(g('whatsapp').value) : null };
+        const o = { email: (editing || g('email').value).trim().toLowerCase(), display_name: g('display_name').value.trim() || null, role: g('role').value, side: g('side').value || null, relation: g('relation').value || null, whatsapp: digits(g('whatsapp').value) ? phoneIntl(g('whatsapp').value) : null };
         if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(o.email)) return toast('Enter a valid Google email', 1);
         if (o.whatsapp && !/^[0-9]{11,15}$/.test(o.whatsapp)) return toast('WhatsApp needs the country code, e.g. 919876543210', 1);
         e.target.disabled = true;
         const { error } = editing ? await S.from('members').update(o).eq('email', editing) : await S.from('members').insert({ ...o, created_by: me.id });
         if (error) { e.target.disabled = false; return toast(/duplicate|unique/i.test(error.message) ? 'This email already has access.' : error.message, 1) }
-        if (!editing && g('mklink')?.checked) {
-          if (!o.whatsapp) toast('Access given. Add a WhatsApp number to create their invite link.', 1);
-          else {
-            let code = slug(o.display_name || o.email.split('@')[0]) || 'family', n = 1;
-            while (referrers.some(f => f.code === code)) code = slug((o.display_name || 'family')).slice(0, 28) + '-' + (++n);
+        if (!editing && g('mklink')?.checked && o.side && o.whatsapp) {
+          {
+            const code = codeFor(o.side, o.relation);
             const { error: e2 } = await S.from('referrers').insert({ code, display_name: o.display_name || o.email.split('@')[0], relation: o.relation, side: o.side, whatsapp: o.whatsapp, owner_email: o.email, created_by: me.id });
             if (e2) toast('Access given, but the link failed: ' + e2.message, 1);
           }

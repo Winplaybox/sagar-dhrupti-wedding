@@ -34,9 +34,15 @@ window.WEDDING = {
 };
 
 /* Normalise a ref code from a URL or record. Unknown codes fall back to the default. */
+/* Friendly aliases: ?ref=groom works like ?ref=sags, ?ref=bride like ?ref=drups. */
+window.WEDDING.aliases = { groom: 'sags', bride: 'drups' };
+window.WEDDING.aliasRef = function (code) {
+  const c = String(code || '').trim().toLowerCase();
+  return window.WEDDING.aliases[c] || c;
+};
 window.WEDDING.resolveRef = function (code, refs) {
   const all = refs || window.WEDDING.refs;
-  const c = String(code || '').trim().toLowerCase();
+  const c = window.WEDDING.aliasRef(code);
   return all[c] ? c : window.WEDDING.defaultRef;
 };
 window.WEDDING.normalizeCode = function (code) {
