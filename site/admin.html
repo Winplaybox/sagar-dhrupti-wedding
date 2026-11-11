@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
 <meta name="theme-color" content="#3b0918">
-<title>Wedding admin · Sagar & Dhrupti</title>
+<title>Wedding dashboard · Sagar & Dhrupti</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Rozha+One&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="/config.js"></script>
@@ -150,20 +150,20 @@ details.item[open]{box-shadow:0 10px 30px -18px #7d0a2066}
 <section id="login" hidden>
   <div class="login-card">
     <div class="seal" aria-hidden="true">S&amp;D</div>
-    <h1>Wedding admin</h1>
-    <p>Manage RSVPs, guests, share links and the invitation.</p>
+    <h1>Wedding dashboard</h1>
+    <p>Family members, admins and the couple sign in here to share invitations and see RSVPs.</p>
     <button class="gbtn" id="google" type="button">
       <svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>
       <span>Continue with Google</span>
     </button>
     <p class="login-err" id="login-err" role="alert"></p>
-    <p class="login-foot">Only Google accounts added by a super admin can open the console.</p>
+    <p class="login-foot">Only Google accounts added by the couple's admins can sign in.</p>
   </div>
 </section>
 
 <div class="shell" id="app" hidden>
   <aside>
-    <div class="brand"><div class="seal" aria-hidden="true">S&amp;D</div><div><b>Sagar &amp; Dhrupti</b><small>Wedding admin</small></div></div>
+    <div class="brand"><div class="seal" aria-hidden="true">S&amp;D</div><div><b>Sagar &amp; Dhrupti</b><small id="brand-sub">Wedding dashboard</small></div></div>
     <nav id="nav" aria-label="Sections"></nav>
     <div class="me"><div class="who"><img id="me-img" alt="" hidden><span><span id="me-name"></span><em id="me-role"></em></span></div><button class="btn sec small" id="out" type="button">Sign out</button></div>
   </aside>
@@ -178,28 +178,41 @@ const C = window.WEDDING;
 const S = supabase.createClient(C.supabaseUrl, C.supabaseKey, { auth: { flowType: 'pkce', detectSessionInUrl: true, persistSession: true, autoRefreshToken: true } });
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const LG = ['en', 'gu', 'hi', 'mr'];
+const LG = ['en', 'gu', 'hi', 'mr'], LGN = { en: 'English', gu: 'Gujarati', hi: 'Hindi', mr: 'Marathi' };
 const SITE = location.origin;
-let me = null, user = null, tab = (location.hash.slice(1) || 'overview'), booted = false;
-let refs = { ...C.refs }, settingsCache = {};
+const MIGRATION = 'supabase/migrations/20261113000000_family_referrers_roles_sections.sql';
+let me = null, user = null, member = null, tab = (location.hash.slice(1) || 'overview'), booted = false;
+let settingsCache = {}, referrers = [], eventsCache = [];
+
+const ROLE = { super_admin: 'Super admin', admin: 'Admin', user: 'Family member' };
+const SIDE = { groom: "Groom's side", bride: "Bride's side", both: 'Both sides' };
+const RELATIONS = [['groom', 'Groom'], ['bride', 'Bride'], ['father', 'Father'], ['mother', 'Mother'], ['brother', 'Brother'], ['sister', 'Sister'], ['grandparent', 'Grandparent'], ['uncle', 'Uncle (kaka / mama / fua / masa)'], ['aunt', 'Aunt (kaki / mami / foi / masi)'], ['cousin', 'Cousin'], ['friend', 'Friend'], ['other', 'Other']];
+const relLabel = r => (RELATIONS.find(x => x[0] === r) || [r, r || ''])[1];
+const isAdmin = () => me && (me.role === 'admin' || me.role === 'super_admin');
+const isSuper = () => me && me.role === 'super_admin';
 
 /* ───────── helpers ───────── */
 let toastT;
-function toast(text, bad) { const t = $('toast'); t.textContent = text; t.className = 'show' + (bad ? ' err' : ''); clearTimeout(toastT); toastT = setTimeout(() => t.className = '', 2800) }
+function toast(text, bad) { const t = $('toast'); t.textContent = text; t.className = 'show' + (bad ? ' err' : ''); clearTimeout(toastT); toastT = setTimeout(() => t.className = '', 3200) }
 async function audit(action, entity_type, entity_id, metadata) { if (!me) return; await S.from('audit_logs').insert({ actor_id: me.id, action, entity_type, entity_id: entity_id ? String(entity_id) : null, metadata: metadata || {} }) }
 async function copy(text) { try { await navigator.clipboard.writeText(text); toast('Link copied') } catch { prompt('Copy this link', text) } }
 const digits = s => String(s || '').replace(/\D/g, '');
-function waTo(phone, text) { let d = digits(phone); if (d.length === 10) d = '91' + d; return 'https://wa.me/' + d + '?text=' + encodeURIComponent(text) }
+const phoneIntl = s => { let d = digits(s); if (d.length === 10) d = '91' + d; return d };
+const waTo = (phone, text) => 'https://wa.me/' + phoneIntl(phone) + '?text=' + encodeURIComponent(text);
 const waShare = text => 'https://wa.me/?text=' + encodeURIComponent(text);
-const link = (ref, extra) => { const u = new URL(SITE + '/'); u.searchParams.set('ref', ref); for (const k in extra || {}) if (extra[k]) u.searchParams.set(k, extra[k]); return u.toString() };
+const slug = s => String(s || '').toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 32);
+const link = (code, extra) => { const u = new URL(SITE + '/'); u.searchParams.set('ref', code); for (const k in extra || {}) if (extra[k]) u.searchParams.set(k, extra[k]); return u.toString() };
 const fmtDate = d => d ? new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Kolkata' }).format(new Date(d)) : '';
-const refLabel = r => (refs[r] && refs[r].label) || r || '—';
-const refSide = r => (refs[r] && refs[r].side) || '';
-function inviteText(url, name) {
-  const c = settingsCache.couple || C.couple, v = settingsCache.venue || C.venue;
-  const date = new Intl.DateTimeFormat('en-IN', { dateStyle: 'long', timeZone: 'Asia/Kolkata' }).format(new Date((c.wedding_date || C.couple.wedding_date) + 'T00:00:00+05:30'));
-  return `🙏 ${name ? 'Dear ' + name + ',\n' : ''}With the blessings of our elders, you are invited to the wedding of Sagar & Dhrupti.\n\n📅 ${date}\n📍 ${v.name || ''}\n\nOpen your invitation and RSVP:\n${url}`;
+const refById = id => referrers.find(r => r.id === id);
+const refOf = row => refById(row.referrer_id) || referrers.find(r => r.code === (row.ref_code || C.defaultRef)) || null;
+const missing = err => err && /does not exist|schema cache|PGRST20[25]|42P01|42883/i.test((err.message || '') + (err.code || ''));
+function migrationCard(title) { return head(title) + `<div class="card"><h2>One database step is pending</h2><p class="sub">Run <code>${MIGRATION}</code> once in the Supabase SQL editor, then reload this page.</p><button class="btn" onclick="location.reload()">Reload</button></div>` }
+function inviteText(url, name, from) {
+  const c = { ...C.couple, ...(settingsCache.couple || {}) }, v = { ...C.venue, ...(settingsCache.venue || {}) };
+  const date = new Intl.DateTimeFormat('en-IN', { dateStyle: 'long', timeZone: 'Asia/Kolkata' }).format(new Date(c.wedding_date + 'T00:00:00+05:30'));
+  return `🙏 ${name ? 'Dear ' + name + ',\n' : ''}With the blessings of our elders${from ? ', ' + from + ' warmly invites you' : ', you are warmly invited'} to the wedding of ${c.groom || 'Sagar'} & ${(c.bride || 'Dhrupti').split(' ')[0]}.\n\n📅 ${date}\n📍 ${v.name || ''}\n\nOpen your invitation and RSVP:\n${url}`;
 }
+function opts(list, value) { return list.map(o => { const [v, l] = Array.isArray(o) ? o : [o, o]; return `<option value="${esc(v)}" ${String(v) === String(value ?? '') ? 'selected' : ''}>${esc(l)}</option>` }).join('') }
 const I = {
   copy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>',
   wa: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm4.5 12.1c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1-.7.8-.8 1-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.3-.4.8-1.4.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.8 11.9 11.9 0 0 0 4.6 4c1.7.7 2.4.8 3.2.7.5-.1 1.5-.6 1.8-1.2s.2-1.1.1-1.2-.2-.2-.4-.3z"/></svg>',
@@ -207,102 +220,122 @@ const I = {
   dl: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m-5-5 5 5 5-5M4 21h16"/></svg>'
 };
 const NAV = [
-  ['overview', 'Overview', '<path d="M3 13h8V3H3zm10 8h8V11h-8zM3 21h8v-6H3zm10-18v6h8V3z"/>'],
-  ['rsvps', 'RSVPs', '<path d="M9 11l3 3 8-8M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/>'],
-  ['guests', 'Guests & invites', '<circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0M17 11h6M20 8v6"/>'],
-  ['links', 'Share links', '<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>'],
-  ['events', 'Events', '<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4m8-4v4"/>'],
-  ['gallery', 'Gallery', '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/>'],
-  ['settings', 'Settings', '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>'],
-  ['admins', 'Admins', '<path d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5z"/>', 'super']
+  ['overview', 'Overview', '<path d="M3 13h8V3H3zm10 8h8V11h-8zM3 21h8v-6H3zm10-18v6h8V3z"/>', 'all'],
+  ['links', 'Invite links', '<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>', 'all'],
+  ['rsvps', 'RSVPs', '<path d="M9 11l3 3 8-8M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/>', 'all'],
+  ['guests', 'Guests', '<circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0M17 11h6M20 8v6"/>', 'all'],
+  ['events', 'Events', '<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4m8-4v4"/>', 'admin'],
+  ['sections', 'Sections & text', '<path d="M4 5h16M4 12h16M4 19h10"/>', 'admin'],
+  ['gallery', 'Gallery', '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/>', 'admin'],
+  ['settings', 'Couple & venue', '<path d="M12 21s-7-4.4-9.3-9A5 5 0 0 1 12 6a5 5 0 0 1 9.3 6c-2.3 4.6-9.3 9-9.3 9z"/>', 'admin'],
+  ['people', 'People & access', '<path d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5z"/>', 'admin'],
+  ['profile', 'My profile', '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>', 'all']
 ];
+const allowed = k => { const n = NAV.find(x => x[0] === k); return n && (n[3] === 'all' || isAdmin()) };
 
 /* ───────── auth ───────── */
-function showLogin(msg) { $('app').hidden = true; $('login').hidden = false; $('login-err').textContent = msg || ''; booted = false; me = null }
+function showLogin(msg) { $('app').hidden = true; $('login').hidden = false; $('login-err').textContent = msg || ''; $('google').disabled = false; booted = false; me = null }
 $('google').onclick = async () => {
   $('google').disabled = true; $('login-err').textContent = '';
+  try {
+    const st = await fetch(C.supabaseUrl + '/auth/v1/settings', { headers: { apikey: C.supabaseKey } }).then(r => r.json());
+    if (st && st.external && st.external.google === false) { $('google').disabled = false; $('login-err').textContent = 'Google sign-in is not switched on in Supabase yet (Authentication → Providers → Google).'; return }
+  } catch {}
   const { error } = await S.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: SITE + '/admin', queryParams: { prompt: 'select_account' } } });
-  if (error) { $('google').disabled = false; $('login-err').textContent = error.message.includes('provider is not enabled') ? 'Google sign-in is not switched on in Supabase yet. See docs/DEPLOYMENT.md → Google sign-in.' : error.message }
+  if (error) { $('google').disabled = false; $('login-err').textContent = error.message }
 };
 $('out').onclick = async () => { await S.auth.signOut(); showLogin() };
 
+async function claim() {
+  for (const fn of ['claim_access', 'claim_admin']) {
+    const r = await S.rpc(fn);
+    if (!r.error) return Array.isArray(r.data) ? r.data[0] : r.data;
+    if (!missing(r.error)) break;
+  }
+  const p = await S.from('profiles').select('*').eq('id', user.id).maybeSingle();
+  return p.data;
+}
 async function boot(session) {
   if (booted && me) return;
   if (!session) return showLogin(new URLSearchParams(location.search).get('error_description') || '');
   user = session.user; booted = true;
   if (location.search) history.replaceState(null, '', location.pathname + location.hash);
-  let profile = null;
-  const r = await S.rpc('claim_admin');
-  if (!r.error) profile = Array.isArray(r.data) ? r.data[0] : r.data;
-  else { const p = await S.from('profiles').select('*').eq('id', user.id).maybeSingle(); profile = p.data }
-  if (!profile) { await S.auth.signOut(); return showLogin(`${user.email} doesn't have admin access. Ask a super admin to add this email under Admins.`) }
+  const profile = await claim();
+  if (!profile) { await S.auth.signOut(); return showLogin(`${user.email} hasn't been added yet. Ask Sagar, Dhrupti or an admin to add this email under People & access.`) }
   me = profile;
   $('login').hidden = true; $('app').hidden = false;
   const avatar = user.user_metadata?.avatar_url;
   if (avatar) { $('me-img').src = avatar; $('me-img').hidden = false }
-  $('me-name').textContent = me.display_name || user.email; $('me-role').textContent = (me.role === 'super_admin' ? 'Super admin' : 'Admin') + ' · ' + user.email;
-  await loadSettings(); show();
+  await loadContext();
+  $('me-name').textContent = member?.display_name || me.display_name || user.email;
+  $('me-role').textContent = ROLE[me.role] + (member?.side ? ' · ' + SIDE[member.side] : '');
+  $('brand-sub').textContent = isAdmin() ? 'Wedding admin' : 'My invitations';
+  show();
 }
 S.auth.onAuthStateChange((event, session) => {
   if (event === 'SIGNED_OUT') return showLogin();
   if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN') setTimeout(() => boot(session), 0);
 });
 
-async function loadSettings() {
-  const { data } = await S.from('site_settings').select('*');
-  settingsCache = {}; refs = { ...C.refs };
-  for (const s of data || []) { settingsCache[s.setting_key] = s.value; if (s.setting_key === 'refs') { refs = {}; for (const k in s.value) refs[k] = { ...(C.refs[k] || {}), ...s.value[k] } } }
-  if (!Object.keys(refs).length) refs = { ...C.refs };
+async function loadContext() {
+  const [st, mm, rf, ev] = await Promise.all([
+    S.from('site_settings').select('*'),
+    S.from('members').select('*').eq('user_id', user.id).maybeSingle(),
+    S.from('referrers').select('*').order('side').order('created_at'),
+    S.from('events').select('id,slug,title,audience,event_date,sort_order').order('sort_order')
+  ]);
+  settingsCache = {}; for (const s of st.data || []) settingsCache[s.setting_key] = s.value;
+  member = mm.data || null;
+  referrers = rf.error ? Object.entries(C.refs).map(([code, r]) => ({ id: null, code, ...r, is_active: true, _fallback: true })) : (rf.data || []);
+  eventsCache = ev.data || [];
 }
 
 /* ───────── shell ───────── */
 function renderNav() {
-  $('nav').innerHTML = NAV.filter(n => n[3] !== 'super' || me.role === 'super_admin').map(([k, label, icon]) => `<button type="button" data-tab="${k}" ${k === tab ? 'aria-current="page"' : ''}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${icon}</svg>${label}</button>`).join('');
+  $('nav').innerHTML = NAV.filter(n => allowed(n[0])).map(([k, label, icon]) => `<button type="button" data-tab="${k}" ${k === tab ? 'aria-current="page"' : ''}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${icon}</svg>${label}</button>`).join('');
 }
-$('nav').addEventListener('click', e => { const b = e.target.closest('[data-tab]'); if (b) { tab = b.dataset.tab; location.hash = tab; show(); $('main').focus({ preventScroll: true }); scrollTo(0, 0) } });
+function go(t) { tab = t; location.hash = t; show(); $('main').focus({ preventScroll: true }); scrollTo(0, 0) }
+$('nav').addEventListener('click', e => { const b = e.target.closest('[data-tab]'); if (b) go(b.dataset.tab) });
 addEventListener('hashchange', () => { const t = location.hash.slice(1); if (t && t !== tab && me) { tab = t; show() } });
 function head(title, sub, actions) { return `<div class="head"><div><h1>${title}</h1>${sub ? `<p>${sub}</p>` : ''}</div><div class="row">${actions || ''}</div></div>` }
 async function show() {
-  if (!NAV.some(n => n[0] === tab) || (tab === 'admins' && me.role !== 'super_admin')) tab = 'overview';
+  if (!allowed(tab)) tab = 'overview';
   renderNav();
   const m = $('main'); m.innerHTML = '<p class="loading">Loading…</p>';
-  try { await VIEWS[tab](m) } catch (err) { console.error(err); m.innerHTML = head('Something went wrong') + `<div class="card"><p>${esc(err.message || err)}</p><button class="btn" onclick="location.reload()">Reload</button></div>` }
-}
-function refCards(withGenerator) {
-  return `<div class="refs">${Object.entries(refs).map(([code, r]) => { const url = link(code); return `<div class="refcard"><header><h3>${esc(r.label || code)}</h3><span class="pill ${esc(r.side)}">?ref=${esc(code)}</span><span class="num">Replies go to +${esc(digits(r.whatsapp))}</span></header>
-    <div class="copybox"><code>${esc(url)}</code><button class="btn sec small" data-copy="${esc(url)}">${I.copy}Copy</button></div>
-    <div class="row"><a class="btn wa small" target="_blank" rel="noopener" href="${esc(waShare(inviteText(url)))}">${I.wa}Share on WhatsApp</a><a class="btn sec small" target="_blank" rel="noopener" href="${esc(url)}">${I.open}Open</a></div></div>` }).join('')}</div>
-  ${withGenerator ? `<div class="card" style="margin-top:1rem"><h2>Personal link for one guest</h2><p class="sub">The invitation greets them by name. For tracked invites with a code, add them under Guests & invites.</p>
-    <div class="form-grid"><label class="f">Guest name<input id="pl-name" placeholder="e.g. Ramesh Kaka" maxlength="60"></label><label class="f">Side<select id="pl-ref">${Object.entries(refs).map(([k, r]) => `<option value="${esc(k)}">${esc(r.label || k)}</option>`).join('')}</select></label><label class="f">Language<select id="pl-lang"><option value="">Guest chooses (Gujarati first)</option><option value="gu">Gujarati</option><option value="hi">Hindi</option><option value="mr">Marathi</option><option value="en">English</option></select></label></div>
-    <div class="copybox" style="margin-top:.8rem"><code id="pl-out"></code><button class="btn sec small" id="pl-copy">${I.copy}Copy</button></div>
-    <div class="row" style="margin-top:.6rem"><a class="btn wa small" id="pl-wa" target="_blank" rel="noopener">${I.wa}Share on WhatsApp</a></div></div>` : ''}`;
-}
-function wireRefCards(m) {
+  try { await VIEWS[tab](m) } catch (err) { console.error(err); m.innerHTML = missing(err) ? migrationCard('Almost ready') : head('Something went wrong') + `<div class="card"><p>${esc(err.message || err)}</p><button class="btn" onclick="location.reload()">Reload</button></div>` }
   m.querySelectorAll('[data-copy]').forEach(b => b.onclick = () => copy(b.dataset.copy));
-  const n = m.querySelector('#pl-name'); if (!n) return;
-  const upd = () => { const url = link($('pl-ref').value, { to: n.value.trim(), lang: $('pl-lang').value }); $('pl-out').textContent = url; $('pl-wa').href = waShare(inviteText(url, n.value.trim())) };
-  [n, $('pl-ref'), $('pl-lang')].forEach(e => e.oninput = upd); $('pl-copy').onclick = () => copy($('pl-out').textContent); upd();
+  m.querySelectorAll('[data-go]').forEach(b => b.onclick = () => go(b.dataset.go));
 }
+function shareBox(r, stats) {
+  const url = link(r.code);
+  return `<div class="refcard"><header><h3>${esc(r.display_name)}</h3><span class="pill ${esc(r.side)}">${esc(SIDE[r.side] || r.side)}</span>${r.relation ? `<span class="pill">${esc(relLabel(r.relation))}</span>` : ''}${r.is_active === false ? '<span class="pill not_attending">Paused</span>' : ''}</header>
+    <div class="num">Guests see “Invited by ${esc(r.display_name)}” · replies go to +${esc(r.whatsapp)}${stats ? ` · <b>${stats.replies}</b> replies, <b>${stats.heads}</b> coming` : ''}</div>
+    <div class="copybox"><code>${esc(url)}</code><button class="btn sec small" type="button" data-copy="${esc(url)}">${I.copy}Copy</button></div>
+    <div class="row"><a class="btn wa small" target="_blank" rel="noopener" href="${esc(waShare(inviteText(url, '', r.display_name)))}">${I.wa}Share on WhatsApp</a><a class="btn sec small" target="_blank" rel="noopener" href="${esc(url)}">${I.open}Preview</a></div></div>`;
+}
+function statsByRef(rsvps) {
+  const out = {};
+  for (const x of rsvps) { const r = refOf(x); const k = r ? (r.id || r.code) : '—'; out[k] = out[k] || { replies: 0, heads: 0 }; out[k].replies++; if (x.attendance === 'attending') out[k].heads += x.party_size }
+  return out;
+}
+const myRefs = () => referrers.filter(r => r.owner_user_id && r.owner_user_id === user.id);
 
-/* ───────── generic CRUD (events) ───────── */
-const SPEC = {
-  events: { o: 'sort_order', label: r => (r.title && (r.title.en || r.title.gu)) || r.slug, f: [['title', 'Title', 'i18n'], ['slug', 'Slug (unique, e.g. haldi)'], ['event_type', 'Type', 'sel', ['wedding', 'reception', 'other']], ['event_date', 'Date', 'date'], ['starts_at', 'Starts (IST)', 'dt'], ['ends_at', 'Ends (IST)', 'dt'], ['venue_name', 'Venue name'], ['venue_address', 'Venue address'], ['maps_url', 'Google Maps link'], ['description', 'Description', 'i18n'], ['sort_order', 'Order', 'num'], ['is_published', 'Show on invitation', 'bool']] }
-};
+/* ───────── generic CRUD ───────── */
 const toLocal = v => v ? new Date(new Date(v).getTime() + 330 * 6e4).toISOString().slice(0, 16) : '';
 const fromLocal = v => v ? new Date(v + ':00+05:30').toISOString() : null;
-function field([k, lb, t, o], v) {
-  const a = `data-k="${k}" data-t="${t || 'text'}"`;
-  if (t === 'i18n') return `<fieldset class="i18n" style="grid-column:1/-1"><legend>${lb}</legend>${LG.map(l => `<label class="f">${{ en: 'English', gu: 'Gujarati', hi: 'Hindi', mr: 'Marathi' }[l]}<input ${a} data-l="${l}" value="${esc((v || {})[l])}"></label>`).join('')}</fieldset>`;
+function field([k, lb, t, o, hint], v) {
+  const a = `data-k="${k}" data-t="${t || 'text'}"`, h = hint ? `<small class="sub" style="margin:0;font-weight:400">${hint}</small>` : '';
+  if (t === 'i18n' || t === 'i18nl') return `<fieldset class="i18n" style="grid-column:1/-1"><legend>${lb}</legend>${LG.map(l => t === 'i18nl' ? `<label class="f">${LGN[l]}<textarea ${a} data-l="${l}">${esc((v || {})[l])}</textarea></label>` : `<label class="f">${LGN[l]}<input ${a} data-l="${l}" value="${esc((v || {})[l])}"></label>`).join('')}${h}</fieldset>`;
   if (t === 'bool') return `<label class="check"><input type="checkbox" ${a} ${v ? 'checked' : ''}>${lb}</label>`;
-  if (t === 'sel') return `<label class="f">${lb}<select ${a}>${o.map(x => `<option ${x === v ? 'selected' : ''}>${x}</option>`).join('')}</select></label>`;
-  if (t === 'dt') return `<label class="f">${lb}<input type="datetime-local" ${a} value="${toLocal(v)}"></label>`;
-  return `<label class="f">${lb}<input type="${t === 'date' ? 'date' : t === 'num' ? 'number' : 'text'}" ${a} value="${esc(v)}"></label>`;
+  if (t === 'sel') return `<label class="f">${lb}<select ${a}>${opts(o, v)}</select>${h}</label>`;
+  if (t === 'dt') return `<label class="f">${lb}<input type="datetime-local" ${a} value="${toLocal(v)}">${h}</label>`;
+  return `<label class="f" ${t === 'wide' ? 'style="grid-column:1/-1"' : ''}>${lb}<input type="${t === 'date' ? 'date' : t === 'num' ? 'number' : 'text'}" ${a} value="${esc(v)}">${h}</label>`;
 }
 function collect(box, spec) {
   const o = {};
   for (const [k, , t] of spec.f) {
     const els = [...box.querySelectorAll(`[data-k="${k}"]`)];
-    if (t === 'i18n') { o[k] = {}; els.forEach(e => { if (e.value.trim()) o[k][e.dataset.l] = e.value.trim() }) }
+    if (t === 'i18n' || t === 'i18nl') { o[k] = {}; els.forEach(e => { if (e.value.trim()) o[k][e.dataset.l] = e.value.trim() }) }
     else if (t === 'bool') o[k] = els[0].checked;
     else if (t === 'num') o[k] = Number(els[0].value) || 0;
     else if (t === 'dt') o[k] = fromLocal(els[0].value);
@@ -310,17 +343,30 @@ function collect(box, spec) {
   }
   return o;
 }
-async function crud(m, table, title, sub) {
+const AUD = [['both', 'Both sides'], ['groom', "Groom's side only"], ['bride', "Bride's side only"]];
+const SPEC = {
+  events: { o: 'sort_order', label: r => (r.title && (r.title.en || r.title.gu)) || r.slug, pills: r => [SIDE[r.audience || 'both'], r.event_date || ''], f: [
+    ['title', 'Event name', 'i18n'], ['slug', 'Short id (unique, e.g. groom-haldi)'], ['event_type', 'Type', 'sel', [['wedding', 'Wedding / pheras'], ['reception', 'Reception'], ['haldi', 'Haldi / pithi'], ['mehndi', 'Mehndi'], ['sangeet', 'Sangeet / garba'], ['vastu', 'Vastu'], ['puja', 'Puja'], ['other', 'Other']]],
+    ['audience', 'Who sees it', 'sel', AUD, 'Guests see events for their side plus “Both sides” events.'], ['event_date', 'Date', 'date'], ['starts_at', 'Starts (IST)', 'dt'], ['ends_at', 'Ends (IST)', 'dt'],
+    ['venue_name', 'Venue name'], ['venue_address', 'Venue address'], ['maps_url', 'Google Maps link'], ['description', 'Description', 'i18n'], ['sort_order', 'Order on the timeline', 'num'], ['is_published', 'Show on invitation', 'bool']] },
+  site_sections: { o: 'sort_order', label: r => (r.title && (r.title.en || r.title.gu)) || r.kind, pills: r => [r.kind, SIDE[r.audience || 'both'], 'order ' + r.sort_order], f: [
+    ['kind', 'Section style', 'sel', [['text', 'Text'], ['image', 'Photo with text'], ['quote', 'Blessing / shloka (dark band)'], ['list', 'Names list (e.g. family, “Swagatotsuk”)']]],
+    ['audience', 'Who sees it', 'sel', AUD], ['sort_order', 'Position', 'num', null, 'Built-in sections: couple 10 · countdown 20 · events 30 · venue 40 · gallery 50 · RSVP 60'], ['image_url', 'Photo URL (photo style)', 'wide'],
+    ['title', 'Heading', 'i18n'], ['body', 'Text', 'i18nl', null, 'Blank line = new paragraph. Names list: one name per line, add a relation after |, e.g. “Rameshbhai Suthar | Father”.'], ['is_published', 'Show on invitation', 'bool']] }
+};
+async function crud(m, table, title, sub, extra) {
   const sp = SPEC[table];
   const { data, error } = await S.from(table).select('*').order(sp.o);
   if (error) throw error;
-  const row = (r, isNew) => `<details class="item" ${isNew ? '' : ''} data-id="${r?.id || ''}"><summary>${isNew ? '＋ Add new' : esc(sp.label(r))}${!isNew && 'is_published' in r ? `<span class="pill ${r.is_published ? 'attending' : ''}">${r.is_published ? 'Visible' : 'Hidden'}</span>` : ''}</summary>
-    <div class="form-grid" style="margin-top:.6rem">${sp.f.map(f => field(f, r?.[f[0]])).join('')}</div>
+  const row = (r, isNew) => `<details class="item" data-id="${r?.id || ''}" ${isNew && !data.length ? 'open' : ''}><summary>${isNew ? '＋ Add new' : esc(sp.label(r))}${!isNew ? (sp.pills ? sp.pills(r).filter(Boolean).map(p => `<span class="pill">${esc(p)}</span>`).join('') : '') + `<span class="pill ${r.is_published ? 'attending' : ''}">${r.is_published ? 'Visible' : 'Hidden'}</span>` : ''}</summary>
+    <div class="form-grid" style="margin-top:.6rem">${sp.f.map(f => field(f, r ? r[f[0]] : (f[0] === 'audience' ? 'both' : f[0] === 'sort_order' && table === 'site_sections' ? 35 : undefined))).join('')}</div>
     <div class="row" style="margin-top:.8rem"><button class="btn" data-save type="button">${isNew ? 'Add' : 'Save changes'}</button>${isNew ? '' : '<button class="btn danger" data-rm type="button">Delete</button>'}</div></details>`;
-  m.innerHTML = head(title, sub) + `<div class="list">${row(null, true)}${data.map(r => row(r)).join('')}</div>`;
-  m.querySelectorAll('details').forEach(d => {
+  m.innerHTML = head(title, sub) + (extra || '') + `<div class="list">${row(null, true)}${data.map(r => row(r)).join('')}</div>`;
+  m.querySelectorAll('details.item[data-id]').forEach(d => {
     d.querySelector('[data-save]').onclick = async e => {
       const o = collect(d, sp), id = d.dataset.id; e.target.disabled = true;
+      if (table === 'events' && !o.slug) o.slug = slug((o.title && (o.title.en || Object.values(o.title)[0])) || 'event') + '-' + Math.random().toString(36).slice(2, 5);
+      if (table === 'site_sections') { o.updated_by = me.id; o.updated_at = new Date().toISOString() }
       const { error } = id ? await S.from(table).update(o).eq('id', id) : await S.from(table).insert(o);
       e.target.disabled = false; if (error) return toast(error.message, 1);
       await audit(id ? 'update' : 'create', table, id || o.slug); toast(id ? 'Saved' : 'Added'); show();
@@ -329,64 +375,124 @@ async function crud(m, table, title, sub) {
     if (rm) rm.onclick = async () => { if (!confirm('Delete this permanently?')) return; const { error } = await S.from(table).delete().eq('id', d.dataset.id); if (error) return toast(error.message, 1); await audit('delete', table, d.dataset.id); toast('Deleted'); show() };
   });
 }
+async function saveSetting(key, value, btn) {
+  if (btn) btn.disabled = true;
+  const { error } = await S.from('site_settings').upsert({ setting_key: key, value, is_public: true, updated_by: me.id, updated_at: new Date().toISOString() }, { onConflict: 'setting_key' });
+  if (btn) btn.disabled = false; if (error) { toast(error.message, 1); return false }
+  await audit('update', 'site_settings', key); settingsCache[key] = value; toast('Saved'); return true;
+}
 
 /* ───────── views ───────── */
 const VIEWS = {
   async overview(m) {
-    const { data: r, error } = await S.from('rsvps').select('attendance,party_size,ref_code,created_at,guest_name');
+    const { data: r, error } = await S.from('rsvps').select('attendance,party_size,ref_code,referrer_id,created_at,guest_name');
     if (error) throw error;
     const yes = r.filter(x => x.attendance === 'attending'), heads = yes.reduce((a, x) => a + x.party_size, 0);
-    const bySide = Object.keys(refs).map(k => { const s = yes.filter(x => (x.ref_code || C.defaultRef) === k); return `<div class="stat"><b>${s.reduce((a, x) => a + x.party_size, 0)}</b><span>Coming via ${esc(refLabel(k))} (${s.length} replies)</span></div>` }).join('');
-    const recent = r.slice().sort((a, b) => b.created_at.localeCompare(a.created_at)).slice(0, 5);
-    m.innerHTML = head('Overview', 'How the invitations are doing.') +
-      `<div class="stats"><div class="stat accent"><b>${heads}</b><span>Guests attending</span></div><div class="stat"><b>${r.length}</b><span>Replies received</span></div><div class="stat"><b>${r.filter(x => x.attendance === 'maybe').length}</b><span>Not sure yet</span></div><div class="stat"><b>${r.filter(x => x.attendance === 'not_attending').length}</b><span>Can't attend</span></div>${bySide}</div>
-      <div class="card"><h2>Share the invitation</h2><p class="sub">Each link sends RSVP replies to that side's WhatsApp number.</p>${refCards(false)}</div>
-      <div class="card"><div class="row"><h2>Latest replies</h2><span class="spacer"></span><button class="btn sec small" data-go="rsvps">See all RSVPs</button></div>
-      ${recent.length ? `<div class="list" style="margin-top:.8rem">${recent.map(x => `<div class="item"><div class="top"><h3>${esc(x.guest_name)}</h3><span class="pill ${x.attendance}">${x.attendance.replace('_', ' ')}</span><span class="pill ${refSide(x.ref_code)}">${esc(refLabel(x.ref_code || C.defaultRef))}</span></div><div class="meta">${fmtDate(x.created_at)}</div></div>`).join('')}</div>` : '<p class="empty">No replies yet. Share a link above to get started.</p>'}</div>`;
-    wireRefCards(m); m.querySelectorAll('[data-go]').forEach(b => b.onclick = () => { tab = b.dataset.go; location.hash = tab; show() });
+    const st = statsByRef(r), mine = myRefs();
+    const stat = (n, l, cls) => `<div class="stat ${cls || ''}"><b>${n}</b><span>${l}</span></div>`;
+    let html = head(isAdmin() ? 'Overview' : `Namaste${member?.display_name ? ', ' + esc(member.display_name.split(' ')[0]) : ''}`, isAdmin() ? 'Replies from every family member’s link.' : 'Share your link with your guests. Their replies come to your WhatsApp and appear here.');
+    html += `<div class="stats">${stat(heads, 'Guests coming', 'accent')}${stat(r.length, 'Replies')}${stat(r.filter(x => x.attendance === 'maybe').length, 'Not sure yet')}${stat(r.filter(x => x.attendance === 'not_attending').length, "Can't come")}`;
+    if (isAdmin()) for (const sd of ['groom', 'bride']) { const rs = r.filter(x => (refOf(x)?.side || 'groom') === sd); html += stat(rs.filter(x => x.attendance === 'attending').reduce((a, x) => a + x.party_size, 0), `Coming · ${SIDE[sd]} (${rs.length} replies)`) }
+    html += '</div>';
+    if (isAdmin()) {
+      const rows = referrers.map(f => ({ f, s: st[f.id || f.code] || { replies: 0, heads: 0 } })).sort((a, b) => b.s.heads - a.s.heads || b.s.replies - a.s.replies);
+      html += `<div class="card"><div class="row"><h2>Who invited whom</h2><span class="spacer"></span><button class="btn sec small" data-go="links">Manage links</button></div><p class="sub">Each family member’s link and the guests it brought.</p><div class="list">${rows.map(({ f, s }) => `<div class="item"><div class="top"><h3>${esc(f.display_name)}</h3><span class="pill ${f.side}">${SIDE[f.side]}</span>${f.relation ? `<span class="pill">${esc(relLabel(f.relation))}</span>` : ''}<span class="pill attending">${s.heads} coming</span><span class="pill">${s.replies} replies</span></div></div>`).join('') || '<p class="empty">No invite links yet.</p>'}</div></div>`;
+    }
+    const shareList = isAdmin() && !mine.length ? referrers.filter(f => f.code === 'sags' || f.code === 'drups') : mine;
+    html += `<div class="card"><h2>${mine.length ? 'Your invite links' : 'Main invite links'}</h2><p class="sub">Send these on WhatsApp. Guests see who invited them.</p>${shareList.length ? `<div class="refs">${shareList.map(f => shareBox(f, st[f.id || f.code])).join('')}</div>` : `<p class="empty">You don't have an invite link yet. <button class="btn small" data-go="links">Create my link</button></p>`}</div>`;
+    const recent = r.slice().sort((a, b) => b.created_at.localeCompare(a.created_at)).slice(0, 6);
+    html += `<div class="card"><div class="row"><h2>Latest replies</h2><span class="spacer"></span><button class="btn sec small" data-go="rsvps">See all</button></div>${recent.length ? `<div class="list" style="margin-top:.8rem">${recent.map(x => { const f = refOf(x); return `<div class="item"><div class="top"><h3>${esc(x.guest_name)}</h3><span class="pill ${x.attendance}">${x.attendance.replace('_', ' ')}</span>${f ? `<span class="pill ${f.side}">via ${esc(f.display_name)}</span>` : ''}</div><div class="meta">${fmtDate(x.created_at)}</div></div>` }).join('')}</div>` : '<p class="empty">No replies yet.</p>'}</div>`;
+    m.innerHTML = html;
+  },
+
+  async links(m) {
+    const [{ data: rs }, { data: mem }] = await Promise.all([S.from('rsvps').select('attendance,party_size,ref_code,referrer_id'), isAdmin() ? S.from('members').select('email,display_name,user_id,side') : Promise.resolve({ data: [] })]);
+    if (referrers[0]?._fallback) { m.innerHTML = migrationCard('Invite links'); return }
+    const st = statsByRef(rs || []);
+    const mySide = member?.side || 'groom';
+    const ownerOpts = [['', 'Nobody (managed by admins)'], ...(mem || []).map(x => [x.email, (x.display_name ? x.display_name + ' · ' : '') + x.email])];
+    const form = (r) => `<div class="form-grid" style="margin-top:.6rem">
+      <label class="f">Name guests will see<input data-f="display_name" value="${esc(r?.display_name ?? (r ? '' : (myRefs().length ? '' : member?.display_name || '')))}" placeholder="e.g. Sagar's Mummy" maxlength="80"><small class="sub" style="margin:0;font-weight:400">Shown as “Invited by …”</small></label>
+      <label class="f">Link code<input data-f="code" value="${esc(r?.code)}" placeholder="auto from name" maxlength="32" ${r && ['sags', 'drups'].includes(r.code) ? 'readonly' : ''}><small class="sub" style="margin:0;font-weight:400">Small letters, numbers, - only</small></label>
+      <label class="f">Relation<select data-f="relation">${opts([['', '—'], ...RELATIONS], r?.relation ?? (r ? '' : member?.relation))}</select></label>
+      ${isAdmin() ? `<label class="f">Side<select data-f="side">${opts([['groom', "Groom's side"], ['bride', "Bride's side"]], r?.side || mySide)}</select></label>` : `<label class="f">Side<input value="${esc(SIDE[mySide])}" readonly></label>`}
+      <label class="f">WhatsApp for replies<input data-f="whatsapp" inputmode="tel" value="${esc(r?.whatsapp ?? (member?.whatsapp || ''))}" placeholder="919876543210"><small class="sub" style="margin:0;font-weight:400">With country code (91…)</small></label>
+      ${isAdmin() ? `<label class="f">Belongs to (sees its RSVPs)<select data-f="owner_email">${opts(ownerOpts, r?.owner_email || '')}</select></label>` : ''}
+      <label class="check"><input type="checkbox" data-f="is_active" ${r?.is_active === false ? '' : 'checked'}>Link active</label></div>`;
+    const card = r => `<details class="item" data-id="${r.id}"><summary>${esc(r.display_name)}<span class="pill ${r.side}">${SIDE[r.side]}</span><span class="pill">?ref=${esc(r.code)}</span>${r.is_active === false ? '<span class="pill not_attending">Paused</span>' : ''}<span class="pill attending">${(st[r.id] || { heads: 0 }).heads} coming</span></summary>
+      ${shareBox(r, st[r.id])}${isAdmin() ? `<p class="sub" style="margin:.2rem 0 0">Owner: ${esc(r.owner_email || (r.owner_user_id ? 'signed-in member' : 'admins'))}</p>` : ''}
+      ${form(r)}<div class="row" style="margin-top:.8rem"><button class="btn" data-save type="button">Save changes</button>${['sags', 'drups'].includes(r.code) ? '' : '<button class="btn danger" data-rm type="button">Delete link</button>'}</div></details>`;
+    const groups = isAdmin() ? ['groom', 'bride'].map(sd => [SIDE[sd], referrers.filter(r => r.side === sd)]) : [['Your links', referrers]];
+    m.innerHTML = head('Invite links', isAdmin() ? 'One link per family member (or more). Each shows “Invited by …” and sends replies to that person’s WhatsApp.' : 'Make a link for each group you invite. Replies come to your WhatsApp and show up under RSVPs.') +
+      `<details class="item" data-id="" ${referrers.length ? '' : 'open'}><summary>＋ New invite link</summary>${form(null)}<div class="row" style="margin-top:.8rem"><button class="btn" data-save type="button">Create link</button></div></details>` +
+      groups.map(([title, list]) => `<h2 style="margin:1.4rem 0 .6rem;font-size:1rem">${title} <span class="sub">(${list.length})</span></h2><div class="list">${list.map(card).join('') || '<p class="empty">No links yet.</p>'}</div>`).join('');
+    m.querySelectorAll('details.item').forEach(d => {
+      const g = k => d.querySelector(`[data-f="${k}"]`);
+      const nameEl = g('display_name'), codeEl = g('code');
+      if (!d.dataset.id) nameEl.oninput = () => { if (!codeEl.dataset.touched) codeEl.value = slug(nameEl.value) }; codeEl.oninput = () => codeEl.dataset.touched = 1;
+      d.querySelector('[data-save]').onclick = async e => {
+        const o = { display_name: nameEl.value.trim(), code: C.normalizeCode(codeEl.value || slug(nameEl.value)), relation: g('relation').value || null, whatsapp: phoneIntl(g('whatsapp').value), is_active: g('is_active').checked, side: isAdmin() ? g('side').value : mySide, updated_at: new Date().toISOString() };
+        if (!o.display_name) return toast('Add the name guests will see', 1);
+        if (o.code.length < 2) return toast('Link code needs at least 2 letters', 1);
+        if (!/^[0-9]{11,15}$/.test(o.whatsapp)) return toast('Add a WhatsApp number with country code, e.g. 919876543210', 1);
+        if (isAdmin()) { o.owner_email = g('owner_email').value || null; const mm = (mem || []).find(x => x.email === o.owner_email); o.owner_user_id = mm?.user_id || null }
+        const id = d.dataset.id; e.target.disabled = true;
+        if (!id) { o.created_by = me.id; if (!isAdmin()) o.owner_user_id = user.id }
+        const { error } = id ? await S.from('referrers').update(o).eq('id', id) : await S.from('referrers').insert(o);
+        e.target.disabled = false;
+        if (error) return toast(/duplicate|unique/i.test(error.message) ? `The code “${o.code}” is taken. Try another.` : error.message, 1);
+        await audit(id ? 'update' : 'create', 'referrers', o.code); toast(id ? 'Saved' : 'Link created'); await loadContext(); show();
+      };
+      const rm = d.querySelector('[data-rm]');
+      if (rm) rm.onclick = async () => { if (!confirm('Delete this link? RSVPs already received stay, but the link stops working.')) return; const { error } = await S.from('referrers').delete().eq('id', d.dataset.id); if (error) return toast(error.message, 1); await audit('delete', 'referrers', d.dataset.id); toast('Link deleted'); await loadContext(); show() };
+    });
   },
 
   async rsvps(m) {
-    const [{ data, error }, ev] = await Promise.all([S.from('rsvps').select('*').order('created_at', { ascending: false }), S.from('events').select('id,title,slug')]);
+    const { data, error } = await S.from('rsvps').select('*').order('created_at', { ascending: false });
     if (error) throw error;
-    const evName = id => { const e = (ev.data || []).find(x => x.id === id); return e ? (e.title?.en || e.slug) : '' };
-    m.innerHTML = head('RSVPs', `${data.length} replies`, `<button class="btn sec" id="csv">${I.dl}Download CSV</button>`) +
-      `<div class="toolbar"><input type="search" id="q" placeholder="Search name, phone, message"><select id="fs"><option value="">All sides</option>${Object.keys(refs).map(k => `<option value="${esc(k)}">${esc(refLabel(k))}</option>`).join('')}</select><select id="fa"><option value="">Any answer</option><option value="attending">Attending</option><option value="maybe">Not sure</option><option value="not_attending">Can't attend</option></select></div><p class="sub" id="sum"></p><div class="list" id="rl"></div>`;
+    const evName = id => { const e = eventsCache.find(x => x.id === id); return e ? (e.title?.en || e.slug) : '' };
+    const visRefs = referrers.filter(f => data.some(r => refOf(r) === f) || f.owner_user_id === user.id);
+    m.innerHTML = head('RSVPs', isAdmin() ? `${data.length} replies from all links` : `${data.length} replies from your links`, `<button class="btn sec" id="csv">${I.dl}Download CSV</button>`) +
+      `<div class="toolbar"><input type="search" id="q" placeholder="Search name, phone, message"><select id="fr"><option value="">Invited by anyone</option>${visRefs.map(f => `<option value="${esc(f.id || f.code)}">${esc(f.display_name)}</option>`).join('')}</select>${isAdmin() ? `<select id="fs"><option value="">Both sides</option><option value="groom">Groom's side</option><option value="bride">Bride's side</option></select>` : ''}<select id="fa"><option value="">Any answer</option><option value="attending">Coming</option><option value="maybe">Not sure</option><option value="not_attending">Can't come</option></select></div><p class="sub" id="sum"></p><div class="list" id="rl"></div>`;
     const draw = () => {
-      const q = $('q').value.trim().toLowerCase(), fs = $('fs').value, fa = $('fa').value;
-      const rows = data.filter(r => (!fs || (r.ref_code || C.defaultRef) === fs) && (!fa || r.attendance === fa) && (!q || [r.guest_name, r.phone, r.email, r.message].join(' ').toLowerCase().includes(q)));
-      $('sum').textContent = `${rows.length} shown · ${rows.filter(r => r.attendance === 'attending').reduce((a, r) => a + r.party_size, 0)} guests attending`;
-      $('rl').innerHTML = rows.length ? rows.map(r => `<div class="item"><div class="top"><h3>${esc(r.guest_name)}</h3><span class="pill ${r.attendance}">${r.attendance.replace('_', ' ')}</span><span class="pill">${r.party_size} guest${r.party_size > 1 ? 's' : ''}</span><span class="pill ${refSide(r.ref_code)}">${esc(refLabel(r.ref_code || C.defaultRef))}</span></div>
-        <div class="meta">${r.phone ? `<span>📞 ${esc(r.phone)}</span>` : ''}${r.email ? `<span>✉️ ${esc(r.email)}</span>` : ''}<span>${fmtDate(r.created_at)}</span><span>${esc(r.preferred_language)}</span>${(r.event_ids || []).length ? `<span>${esc(r.event_ids.map(evName).filter(Boolean).join(', '))}</span>` : ''}${r.dietary_notes ? `<span>🍽 ${esc(r.dietary_notes)}</span>` : ''}</div>
+      const q = $('q').value.trim().toLowerCase(), fr = $('fr').value, fs = $('fs')?.value || '', fa = $('fa').value;
+      const rows = data.filter(r => { const f = refOf(r); return (!fr || (f && (f.id || f.code) === fr)) && (!fs || (f?.side || 'groom') === fs) && (!fa || r.attendance === fa) && (!q || [r.guest_name, r.phone, r.email, r.message].join(' ').toLowerCase().includes(q)) });
+      $('sum').textContent = `${rows.length} shown · ${rows.filter(r => r.attendance === 'attending').reduce((a, r) => a + r.party_size, 0)} guests coming`;
+      $('rl').innerHTML = rows.length ? rows.map(r => { const f = refOf(r); return `<div class="item"><div class="top"><h3>${esc(r.guest_name)}</h3><span class="pill ${r.attendance}">${r.attendance.replace('_', ' ')}</span><span class="pill">${r.party_size} guest${r.party_size > 1 ? 's' : ''}</span>${f ? `<span class="pill ${f.side}">Invited by ${esc(f.display_name)}</span>` : ''}</div>
+        <div class="meta">${r.phone ? `<span>📞 ${esc(r.phone)}</span>` : ''}${r.email ? `<span>✉️ ${esc(r.email)}</span>` : ''}<span>${fmtDate(r.created_at)}</span><span>${esc(LGN[r.preferred_language] || r.preferred_language)}</span>${(r.event_ids || []).length ? `<span>${esc(r.event_ids.map(evName).filter(Boolean).join(', '))}</span>` : ''}${r.dietary_notes ? `<span>🍽 ${esc(r.dietary_notes)}</span>` : ''}</div>
         ${r.message ? `<div class="msg">${esc(r.message)}</div>` : ''}
-        <div class="row">${r.phone ? `<a class="btn wa small" target="_blank" rel="noopener" href="${esc(waTo(r.phone, `Namaste ${r.guest_name}! Thank you for your RSVP for Sagar & Dhrupti's wedding 🙏`))}">${I.wa}Reply on WhatsApp</a>` : ''}<span class="spacer"></span><button class="btn danger small" data-del="${r.id}">Delete</button></div></div>`).join('') : '<p class="empty">No replies match these filters.</p>';
+        <div class="row">${r.phone ? `<a class="btn wa small" target="_blank" rel="noopener" href="${esc(waTo(r.phone, `Namaste ${r.guest_name}! Thank you for your RSVP for Sagar & Dhrupti's wedding 🙏`))}">${I.wa}Reply on WhatsApp</a>` : ''}<span class="spacer"></span>${isAdmin() ? `<button class="btn danger small" data-del="${r.id}">Delete</button>` : ''}</div></div>` }).join('') : '<p class="empty">No replies match. Share your invite link to get started.</p>';
       $('rl').querySelectorAll('[data-del]').forEach(b => b.onclick = async () => { if (!confirm('Delete this RSVP?')) return; const { error } = await S.from('rsvps').delete().eq('id', b.dataset.del); if (error) return toast(error.message, 1); await audit('delete', 'rsvps', b.dataset.del); toast('Deleted'); show() });
     };
-    ['q', 'fs', 'fa'].forEach(id => $(id).oninput = draw); draw();
+    ['q', 'fr', 'fs', 'fa'].forEach(id => { if ($(id)) $(id).oninput = draw }); draw();
     $('csv').onclick = () => {
-      const h = ['guest_name', 'phone', 'email', 'attendance', 'party_size', 'ref_code', 'events', 'preferred_language', 'dietary_notes', 'message', 'whatsapp_consent', 'created_at'];
+      const h = ['guest_name', 'phone', 'email', 'attendance', 'party_size', 'invited_by', 'side', 'events', 'preferred_language', 'dietary_notes', 'message', 'created_at'];
       const q = v => '"' + String(v ?? '').replace(/"/g, '""') + '"';
-      const csv = '﻿' + [h.join(',')].concat(data.map(r => h.map(k => q(k === 'events' ? (r.event_ids || []).map(evName).join('; ') : k === 'ref_code' ? (r.ref_code || C.defaultRef) : r[k])).join(','))).join('\n');
-      const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob([csv], { type: 'text/csv' })), download: `rsvps-${new Date().toISOString().slice(0, 10)}.csv` }); a.click();
+      const val = (r, k) => { const f = refOf(r); return k === 'invited_by' ? f?.display_name : k === 'side' ? f?.side : k === 'events' ? (r.event_ids || []).map(evName).join('; ') : r[k] };
+      const csv = '﻿' + [h.join(',')].concat(data.map(r => h.map(k => q(val(r, k))).join(','))).join('\n');
+      Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob([csv], { type: 'text/csv' })), download: `rsvps-${new Date().toISOString().slice(0, 10)}.csv` }).click();
     };
   },
 
   async guests(m) {
     const { data, error } = await S.from('guests').select('*').order('created_at', { ascending: false });
     if (error) throw error;
-    const sideSel = v => `<select data-k="ref_code">${Object.entries(refs).map(([k, r]) => `<option value="${esc(k)}" ${k === (v || C.defaultRef) ? 'selected' : ''}>${esc(r.label || k)}</option>`).join('')}</select>`;
-    const form = g => `<div class="form-grid" style="margin-top:.6rem"><label class="f">Full name<input data-k="full_name" value="${esc(g?.full_name)}" required></label><label class="f">WhatsApp / phone<input data-k="phone" inputmode="tel" value="${esc(g?.phone)}" placeholder="98xxxxxxxx"></label><label class="f">Family / group<input data-k="household_label" value="${esc(g?.household_label)}"></label><label class="f">Side${sideSel(g?.ref_code)}</label><label class="f">Email<input data-k="email" type="email" value="${esc(g?.email)}"></label><label class="f">Invite code<input data-k="invite_code" value="${esc(g?.invite_code)}" placeholder="Created automatically"></label><label class="f" style="grid-column:1/-1">Notes<input data-k="notes" value="${esc(g?.notes)}"></label></div>`;
-    const gl = g => link(g.ref_code || C.defaultRef, { c: g.invite_code });
-    m.innerHTML = head('Guests & invites', `${data.length} guests · each gets a personal link with their name`) +
-      `<div class="toolbar"><input type="search" id="q" placeholder="Search guests"><select id="fs"><option value="">All sides</option>${Object.keys(refs).map(k => `<option value="${esc(k)}">${esc(refLabel(k))}</option>`).join('')}</select></div>
-      <div class="list"><details class="item" data-id="" open><summary>＋ Add guest</summary>${form(null)}<div class="row" style="margin-top:.8rem"><button class="btn" data-save type="button">Add guest</button></div></details><div class="list" id="gl"></div></div>`;
+    const usable = isAdmin() ? referrers : myRefs();
+    if (!usable.length) { m.innerHTML = head('Guests') + `<div class="card"><p class="empty">Create your invite link first, then add guests to send them personal invitations. <button class="btn small" data-go="links">Create my link</button></p></div>`; return }
+    const refSel = v => `<select data-k="referrer_id">${opts(usable.map(f => [f.id, `${f.display_name} (${SIDE[f.side]})`]), v || usable[0].id)}</select>`;
+    const form = g => `<div class="form-grid" style="margin-top:.6rem"><label class="f">Full name<input data-k="full_name" value="${esc(g?.full_name)}"></label><label class="f">WhatsApp / phone<input data-k="phone" inputmode="tel" value="${esc(g?.phone)}" placeholder="98xxxxxxxx"></label><label class="f">Family / group<input data-k="household_label" value="${esc(g?.household_label)}"></label><label class="f">Invited by${refSel(g?.referrer_id)}</label><label class="f">Email<input data-k="email" type="email" value="${esc(g?.email)}"></label><label class="f">Invite code<input data-k="invite_code" value="${esc(g?.invite_code)}" placeholder="Created automatically"></label><label class="f" style="grid-column:1/-1">Notes<input data-k="notes" value="${esc(g?.notes)}"></label></div>`;
+    const gl = g => { const f = refById(g.referrer_id); return link(f?.code || g.ref_code || C.defaultRef, { c: g.invite_code }) };
+    m.innerHTML = head('Guests', `${data.length} guests · each gets a personal link that greets them by name`) +
+      `<div class="toolbar"><input type="search" id="q" placeholder="Search guests"></div>
+      <div class="list"><details class="item" data-id="" ${data.length ? '' : 'open'}><summary>＋ Add guest</summary>${form(null)}<div class="row" style="margin-top:.8rem"><button class="btn" data-save type="button">Add guest</button></div></details><div class="list" id="gl"></div></div>`;
     const draw = () => {
-      const q = $('q').value.trim().toLowerCase(), fs = $('fs').value;
-      const rows = data.filter(g => (!fs || (g.ref_code || C.defaultRef) === fs) && (!q || [g.full_name, g.phone, g.household_label].join(' ').toLowerCase().includes(q)));
-      $('gl').innerHTML = rows.length ? rows.map(g => `<details class="item" data-id="${g.id}"><summary>${esc(g.full_name)} ${g.household_label ? `<span class="pill">${esc(g.household_label)}</span>` : ''}<span class="pill ${refSide(g.ref_code)}">${esc(refLabel(g.ref_code || C.defaultRef))}</span></summary>
+      const q = $('q').value.trim().toLowerCase();
+      const rows = data.filter(g => !q || [g.full_name, g.phone, g.household_label].join(' ').toLowerCase().includes(q));
+      $('gl').innerHTML = rows.length ? rows.map(g => { const f = refById(g.referrer_id); return `<details class="item" data-id="${g.id}"><summary>${esc(g.full_name)} ${g.household_label ? `<span class="pill">${esc(g.household_label)}</span>` : ''}${f ? `<span class="pill ${f.side}">via ${esc(f.display_name)}</span>` : ''}</summary>
         <div class="copybox"><code>${esc(gl(g))}</code><button class="btn sec small" type="button" data-copy="${esc(gl(g))}">${I.copy}Copy</button></div>
-        <div class="row">${g.phone ? `<a class="btn wa small" target="_blank" rel="noopener" href="${esc(waTo(g.phone, inviteText(gl(g), g.full_name)))}">${I.wa}Send invite on WhatsApp</a>` : `<a class="btn wa small" target="_blank" rel="noopener" href="${esc(waShare(inviteText(gl(g), g.full_name)))}">${I.wa}Share on WhatsApp</a>`}</div>
-        ${form(g)}<div class="row" style="margin-top:.8rem"><button class="btn" data-save type="button">Save changes</button><button class="btn danger" data-rm type="button">Delete</button></div></details>`).join('') : '<p class="empty">No guests yet. Add one above to create a personal invite link.</p>';
+        <div class="row"><a class="btn wa small" target="_blank" rel="noopener" href="${esc(g.phone ? waTo(g.phone, inviteText(gl(g), g.full_name, f?.display_name)) : waShare(inviteText(gl(g), g.full_name, f?.display_name)))}">${I.wa}${g.phone ? 'Send invite on WhatsApp' : 'Share on WhatsApp'}</a></div>
+        ${form(g)}<div class="row" style="margin-top:.8rem"><button class="btn" data-save type="button">Save changes</button><button class="btn danger" data-rm type="button">Delete</button></div></details>` }).join('') : '<p class="empty">No guests yet. Add one above to create a personal invitation.</p>';
       wire();
     };
     const wire = () => m.querySelectorAll('details.item').forEach(d => {
@@ -394,27 +500,39 @@ const VIEWS = {
       d.querySelector('[data-save]').onclick = async e => {
         const o = {}; d.querySelectorAll('[data-k]').forEach(i => o[i.dataset.k] = i.value.trim() || null);
         if (!o.full_name) return toast('Add the guest’s name first', 1);
-        o.invite_code = (o.invite_code || Math.random().toString(36).slice(2, 8)).toUpperCase(); o.ref_code = o.ref_code || C.defaultRef;
+        o.invite_code = (o.invite_code || Math.random().toString(36).slice(2, 8)).toUpperCase();
+        const f = refById(o.referrer_id); o.ref_code = f?.code || C.defaultRef;
         const id = d.dataset.id; e.target.disabled = true;
         const { error } = id ? await S.from('guests').update(o).eq('id', id) : await S.from('guests').insert(o);
-        e.target.disabled = false; if (error) return toast(error.message.includes('ref_code') ? 'Run the latest Supabase migration to enable guest sides.' : error.message, 1);
+        e.target.disabled = false; if (error) return toast(error.message, 1);
         await audit(id ? 'update' : 'create', 'guests', id || o.invite_code); toast(id ? 'Saved' : 'Guest added'); show();
       };
       const rm = d.querySelector('[data-rm]'); if (rm) rm.onclick = async () => { if (!confirm('Delete this guest?')) return; const { error } = await S.from('guests').delete().eq('id', d.dataset.id); if (error) return toast(error.message, 1); await audit('delete', 'guests', d.dataset.id); toast('Deleted'); show() };
     });
-    ['q', 'fs'].forEach(id => $(id).oninput = draw); draw();
+    $('q').oninput = draw; draw();
   },
 
-  async links(m) { m.innerHTML = head('Share links', 'Send the invitation from either side. Replies reach that side on WhatsApp.') + refCards(true) + `<p class="sub" style="margin-top:1rem">To change a WhatsApp number or add another side, go to Settings.</p>`; wireRefCards(m) },
+  events: m => crud(m, 'events', 'Events', 'Add every function for each side. Guests see their side’s events plus the shared ones, in date order.'),
 
-  events: m => crud(m, 'events', 'Events', 'Shown on the invitation timeline in this order.'),
+  async sections(m) {
+    const lay = settingsCache.layout || {};
+    const BUILT = [['couple', 'Couple'], ['countdown', 'Countdown'], ['events', 'Events timeline'], ['venue', 'Venue & map'], ['gallery', 'Gallery'], ['rsvp', 'RSVP form']];
+    const COPY = [['invite', 'Invitation line (hero)'], ['couple', 'Couple heading'], ['couple_lede', 'Couple sub-line'], ['count', 'Countdown heading'], ['events', 'Events heading'], ['events_lede', 'Events sub-line'], ['rsvp', 'RSVP heading'], ['rsvp_lede', 'RSVP sub-line'], ['foot_bless', 'Footer blessing'], ['made', 'Footer last line']];
+    const copy = settingsCache.copy || {};
+    const extra = `<div class="card"><h2>Built-in sections</h2><p class="sub">Lower numbers come first. Custom sections below use the same numbers.</p><div class="list">${BUILT.map(([k, l]) => { const c = typeof lay[k] === 'object' ? lay[k] : {}; return `<div class="item" style="grid-template-columns:1fr auto auto;align-items:center"><b>${l}</b><input type="number" data-lay="${k}" value="${c.order ?? C.layout[k]}" style="width:90px" aria-label="${l} position"><label class="check"><input type="checkbox" data-vis="${k}" ${c.hidden ? '' : 'checked'}>Show</label></div>` }).join('')}</div><div class="row" style="margin-top:.8rem"><span class="spacer"></span><button class="btn" id="save-lay" type="button">Save order</button></div></div>
+      <div class="card"><details><summary style="cursor:pointer;font-weight:700">Invitation text (optional overrides)</summary><p class="sub" style="margin-top:.6rem">Leave a box empty to keep the built-in wording for that language.</p>${COPY.map(([k, l]) => `<fieldset class="i18n" style="margin-bottom:.7rem"><legend>${l}</legend>${LG.map(g => `<label class="f">${LGN[g]}<input data-copy-k="${k}" data-l="${g}" value="${esc((copy[k] || {})[g])}"></label>`).join('')}</fieldset>`).join('')}<div class="row"><span class="spacer"></span><button class="btn" id="save-copy" type="button">Save text</button></div></details></div>
+      <h2 style="margin:1.4rem 0 .6rem;font-size:1rem">Custom sections</h2>`;
+    await crud(m, 'site_sections', 'Sections & text', 'Reorder, hide or add sections to the invitation. Changes go live immediately.', extra);
+    $('save-lay').onclick = e => { const out = {}; BUILT.forEach(([k]) => out[k] = { order: Number(m.querySelector(`[data-lay="${k}"]`).value) || C.layout[k], hidden: !m.querySelector(`[data-vis="${k}"]`).checked }); saveSetting('layout', out, e.target) };
+    $('save-copy').onclick = e => { const out = {}; m.querySelectorAll('[data-copy-k]').forEach(i => { if (i.value.trim()) { out[i.dataset.copyK] = out[i.dataset.copyK] || {}; out[i.dataset.copyK][i.dataset.l] = i.value.trim() } }); saveSetting('copy', out, e.target) };
+  },
 
   async gallery(m) {
     const { data, error } = await S.from('gallery_items').select('*').order('sort_order');
     if (error) throw error;
     m.innerHTML = head('Gallery', 'Photos appear on the invitation when marked visible.') +
       `<label class="drop" id="drop"><input type="file" id="file" accept="image/jpeg,image/png,image/webp" multiple hidden><b>Upload photos</b><br><span class="sub">Tap to choose or drop JPG, PNG or WebP files (max 10 MB each)</span></label>
-      <div class="gal" style="margin-top:1rem">${data.map(g => `<div class="item" data-id="${g.id}"><img src="${esc(g.storage_path)}" alt="${esc(g.alt_text?.en || '')}" loading="lazy"><label class="f">Caption<input data-k="alt" value="${esc(g.alt_text?.en || '')}"></label><div class="row"><label class="check"><input type="checkbox" data-k="pub" ${g.is_published ? 'checked' : ''}>Visible</label><input data-k="ord" type="number" value="${g.sort_order}" style="width:70px;min-height:34px" aria-label="Order"></div><div class="row"><button class="btn small" data-save>Save</button><button class="btn danger small" data-rm>Delete</button></div></div>`).join('')}</div>${data.length ? '' : '<p class="empty" style="margin-top:1rem">No photos yet.</p>'}`;
+      <div class="gal" style="margin-top:1rem">${data.map(g => `<div class="item" data-id="${g.id}"><img src="${esc(g.storage_path)}" alt="${esc(g.alt_text?.en || '')}" loading="lazy"><label class="f">Caption<input data-k="alt" value="${esc(g.alt_text?.en || '')}"></label><div class="row"><label class="check"><input type="checkbox" data-k="pub" ${g.is_published ? 'checked' : ''}>Visible</label><input data-k="ord" type="number" value="${g.sort_order}" style="width:70px;min-height:34px" aria-label="Order"></div><div class="row"><button class="btn small" data-save>Save</button><button class="btn sec small" data-copy="${esc(g.storage_path)}">Copy URL</button><button class="btn danger small" data-rm>Delete</button></div></div>`).join('')}</div>${data.length ? '' : '<p class="empty" style="margin-top:1rem">No photos yet.</p>'}`;
     const up = async files => {
       let n = 0;
       for (const f of files) {
@@ -444,56 +562,77 @@ const VIEWS = {
   },
 
   async settings(m) {
-    await loadSettings();
     const c = { ...C.couple, ...(settingsCache.couple || {}) }, v = { ...C.venue, ...(settingsCache.venue || {}) };
-    const refRow = (code, r) => `<div class="refcard" data-ref><div class="form-grid"><label class="f">Ref code (in the link)<input data-r="code" value="${esc(code)}" pattern="[a-z0-9_-]+" placeholder="e.g. sags"></label><label class="f">Name shown in admin<input data-r="label" value="${esc(r.label)}"></label><label class="f">Family side<select data-r="side"><option value="groom" ${r.side === 'groom' ? 'selected' : ''}>Groom's side</option><option value="bride" ${r.side === 'bride' ? 'selected' : ''}>Bride's side</option></select></label><label class="f">WhatsApp number (with country code)<input data-r="whatsapp" inputmode="tel" value="${esc(r.whatsapp)}" placeholder="917387322548"></label></div><div class="row"><span class="spacer"></span><button class="btn danger small" type="button" data-rm-ref>Remove</button></div></div>`;
-    m.innerHTML = head('Settings', 'Changes appear on the invitation right away.') +
-      `<div class="card"><h2>Share links & WhatsApp numbers</h2><p class="sub">A guest opening <code>?ref=CODE</code> sends their RSVP to that number. Links without a ref use <b>${esc(C.defaultRef)}</b>.</p><div class="grid" id="refs">${Object.entries(refs).map(([k, r]) => refRow(k, r)).join('')}</div><div class="row" style="margin-top:.8rem"><button class="btn sec" id="add-ref" type="button">＋ Add another link</button><span class="spacer"></span><button class="btn" id="save-refs" type="button">Save links</button></div></div>
-      <div class="card"><h2>Couple</h2><p class="sub">Names in English. Other languages use the built-in Gujarati, Hindi and Marathi spellings.</p><div class="form-grid"><label class="f">Groom<input id="c-groom" value="${esc(c.groom)}"></label><label class="f">Bride<input id="c-bride" value="${esc(c.bride)}"></label><label class="f">Wedding date<input id="c-date" type="date" value="${esc(c.wedding_date)}"></label><label class="f">Groom photo URL (optional)<input id="c-gp" value="${esc(c.groom_photo)}"></label><label class="f">Bride photo URL (optional)<input id="c-bp" value="${esc(c.bride_photo)}"></label></div><div class="row" style="margin-top:.8rem"><span class="spacer"></span><button class="btn" id="save-couple" type="button">Save couple</button></div></div>
-      <div class="card"><h2>Venue</h2><div class="form-grid"><label class="f">Venue name<input id="v-name" value="${esc(v.name)}"></label><label class="f">Google Maps link<input id="v-map" value="${esc(v.maps_url)}"></label><label class="f" style="grid-column:1/-1">Address<textarea id="v-addr" style="min-height:70px">${esc(v.address)}</textarea></label></div><div class="row" style="margin-top:.8rem"><span class="spacer"></span><button class="btn" id="save-venue" type="button">Save venue</button></div></div>`;
-    const wireRm = () => m.querySelectorAll('[data-rm-ref]').forEach(b => b.onclick = () => b.closest('[data-ref]').remove());
-    wireRm();
-    $('add-ref').onclick = () => { $('refs').insertAdjacentHTML('beforeend', refRow('', { side: 'groom' })); wireRm() };
-    const saveSetting = async (key, value, btn) => {
-      btn.disabled = true;
-      const { error } = await S.from('site_settings').upsert({ setting_key: key, value, is_public: true, updated_by: me.id, updated_at: new Date().toISOString() }, { onConflict: 'setting_key' });
-      btn.disabled = false; if (error) return toast(error.message, 1);
-      await audit('update', 'site_settings', key); toast('Saved'); await loadSettings();
-    };
-    $('save-refs').onclick = e => {
-      const out = {};
-      for (const box of m.querySelectorAll('[data-ref]')) {
-        const g = k => box.querySelector(`[data-r="${k}"]`).value.trim();
-        const code = g('code').toLowerCase(), wa = digits(g('whatsapp'));
-        if (!/^[a-z0-9_-]{1,24}$/.test(code)) return toast('Ref codes can use only small letters, numbers, - and _', 1);
-        if (wa.length < 11) return toast(`Add the country code to the WhatsApp number for “${code}” (e.g. 91…)`, 1);
-        out[code] = { label: g('label') || code, side: g('side'), whatsapp: wa };
-      }
-      if (!out[C.defaultRef]) return toast(`Keep the “${C.defaultRef}” link: it is the default for links without a ref.`, 1);
-      saveSetting('refs', out, e.target);
-    };
+    m.innerHTML = head('Couple & venue', 'Changes appear on the invitation right away.') +
+      `<div class="card"><h2>Couple</h2><p class="sub">Names in English. Gujarati, Hindi and Marathi spellings are built in.</p><div class="form-grid"><label class="f">Groom<input id="c-groom" value="${esc(c.groom)}"></label><label class="f">Bride<input id="c-bride" value="${esc(c.bride)}"></label><label class="f">Wedding date (countdown)<input id="c-date" type="date" value="${esc(c.wedding_date)}"></label><label class="f">Groom photo URL<input id="c-gp" value="${esc(c.groom_photo)}" placeholder="Upload in Gallery, then Copy URL"></label><label class="f">Bride photo URL<input id="c-bp" value="${esc(c.bride_photo)}"></label></div><div class="row" style="margin-top:.8rem"><span class="spacer"></span><button class="btn" id="save-couple" type="button">Save couple</button></div></div>
+      <div class="card"><h2>Main venue</h2><p class="sub">Shown in the venue section and map. Each event can also have its own venue.</p><div class="form-grid"><label class="f">Venue name<input id="v-name" value="${esc(v.name)}"></label><label class="f">Google Maps link<input id="v-map" value="${esc(v.maps_url)}"></label><label class="f" style="grid-column:1/-1">Address<textarea id="v-addr" style="min-height:70px">${esc(v.address)}</textarea></label></div><div class="row" style="margin-top:.8rem"><span class="spacer"></span><button class="btn" id="save-venue" type="button">Save venue</button></div></div>`;
     $('save-couple').onclick = e => saveSetting('couple', { ...(settingsCache.couple || {}), groom: $('c-groom').value.trim(), bride: $('c-bride').value.trim(), wedding_date: $('c-date').value, groom_photo: $('c-gp').value.trim() || undefined, bride_photo: $('c-bp').value.trim() || undefined }, e.target);
     $('save-venue').onclick = e => saveSetting('venue', { ...(settingsCache.venue || {}), name: $('v-name').value.trim(), address: $('v-addr').value.trim(), maps_url: $('v-map').value.trim() }, e.target);
   },
 
-  async admins(m) {
-    const { data, error } = await S.from('admin_allowlist').select('*').order('created_at');
-    if (error) { m.innerHTML = head('Admins') + `<div class="card"><h2>Run the latest migration first</h2><p class="sub">Google sign-in admins need <code>supabase/migrations/20261112000000_refs_and_google_admins.sql</code>. Run it once in the Supabase SQL editor, then reload.</p><p class="sub">${esc(error.message)}</p></div>`; return }
-    m.innerHTML = head('Admins', 'People who can sign in with Google. They get access the first time they sign in.') +
-      `<div class="card"><h2>Add someone</h2><div class="form-grid"><label class="f">Google email<input id="a-email" type="email" placeholder="name@gmail.com"></label><label class="f">Name<input id="a-name"></label><label class="f">Role<select id="a-role"><option value="admin">Admin: manage guests, RSVPs and content</option><option value="super_admin">Super admin: also manage admins</option></select></label></div><div class="row" style="margin-top:.8rem"><span class="spacer"></span><button class="btn" id="a-add" type="button">Give access</button></div></div>
-      <div class="list" style="margin-top:1rem">${data.map(a => `<div class="item"><div class="top"><h3>${esc(a.display_name || a.email)}</h3><span class="pill ${a.role === 'super_admin' ? 'bride' : ''}">${a.role === 'super_admin' ? 'Super admin' : 'Admin'}</span></div><div class="meta"><span>${esc(a.email)}</span><span>Added ${fmtDate(a.created_at)}</span></div><div class="row"><span class="spacer"></span>${a.email === (user.email || '').toLowerCase() ? '<span class="sub">This is you</span>' : `<button class="btn danger small" data-rm="${esc(a.email)}">Remove access</button>`}</div></div>`).join('')}</div>`;
-    $('a-add').onclick = async e => {
-      const email = $('a-email').value.trim().toLowerCase();
-      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return toast('Enter a valid email address', 1);
+  async people(m) {
+    const { data, error } = await S.from('members').select('*').order('role').order('created_at');
+    if (error) throw error;
+    const roles = isSuper() ? [['user', 'Family member: own links & RSVPs'], ['admin', 'Admin: edit the whole site'], ['super_admin', 'Super admin: also manage admins']] : [['user', 'Family member: own links & RSVPs']];
+    const canEdit = x => isSuper() || x.role === 'user';
+    const form = x => `<div class="form-grid" style="margin-top:.6rem">
+      <label class="f">Google email<input data-p="email" type="email" value="${esc(x?.email)}" ${x ? 'readonly' : ''} placeholder="name@gmail.com"></label>
+      <label class="f">Name<input data-p="display_name" value="${esc(x?.display_name)}" placeholder="e.g. Sagar's Mummy"></label>
+      <label class="f">Access<select data-p="role">${opts(roles, x?.role || 'user')}</select></label>
+      <label class="f">Side<select data-p="side">${opts([['groom', "Groom's side"], ['bride', "Bride's side"]], x?.side || 'groom')}</select></label>
+      <label class="f">Relation<select data-p="relation">${opts([['', '—'], ...RELATIONS], x?.relation || '')}</select></label>
+      <label class="f">WhatsApp<input data-p="whatsapp" inputmode="tel" value="${esc(x?.whatsapp)}" placeholder="919876543210"></label>
+      ${x ? '' : `<label class="check" style="grid-column:1/-1"><input type="checkbox" data-p="mklink" checked>Also create their invite link (replies go to this WhatsApp)</label>`}</div>`;
+    m.innerHTML = head('People & access', isSuper() ? 'Add family members, admins and super admins by Google email.' : 'Add family members by Google email. They can sign in, make invite links and see their RSVPs.') +
+      `<details class="item" data-email="" open><summary>＋ Add person</summary>${form(null)}<div class="row" style="margin-top:.8rem"><button class="btn" data-save type="button">Give access</button></div></details>
+      <div class="list" style="margin-top:1rem">${data.map(x => `<details class="item" data-email="${esc(x.email)}"><summary>${esc(x.display_name || x.email)}<span class="pill ${x.role === 'user' ? '' : 'bride'}">${ROLE[x.role]}</span>${x.side ? `<span class="pill ${x.side}">${SIDE[x.side]}</span>` : ''}${x.relation ? `<span class="pill">${esc(relLabel(x.relation))}</span>` : ''}<span class="pill ${x.user_id ? 'attending' : 'maybe'}">${x.user_id ? 'Signed in' : 'Not signed in yet'}</span></summary>
+        <div class="meta">${esc(x.email)} · invite links: ${referrers.filter(f => f.owner_email === x.email || (x.user_id && f.owner_user_id === x.user_id)).map(f => esc(f.code)).join(', ') || 'none'}</div>
+        ${canEdit(x) && x.email !== (user.email || '').toLowerCase() ? form(x) + `<div class="row" style="margin-top:.8rem"><button class="btn" data-save type="button">Save</button><button class="btn danger" data-rm type="button">Remove access</button></div>` : `<p class="sub">${x.email === (user.email || '').toLowerCase() ? 'This is you. Edit your details under My profile.' : 'Only a super admin can change this person.'}</p>`}</details>`).join('')}</div>`;
+    m.querySelectorAll('details.item[data-email]').forEach(d => {
+      const g = k => d.querySelector(`[data-p="${k}"]`);
+      const save = d.querySelector('[data-save]'); if (!save) return;
+      save.onclick = async e => {
+        const editing = d.dataset.email;
+        const o = { email: (editing || g('email').value).trim().toLowerCase(), display_name: g('display_name').value.trim() || null, role: g('role').value, side: g('side').value, relation: g('relation').value || null, whatsapp: digits(g('whatsapp').value) ? phoneIntl(g('whatsapp').value) : null };
+        if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(o.email)) return toast('Enter a valid Google email', 1);
+        if (o.whatsapp && !/^[0-9]{11,15}$/.test(o.whatsapp)) return toast('WhatsApp needs the country code, e.g. 919876543210', 1);
+        e.target.disabled = true;
+        const { error } = editing ? await S.from('members').update(o).eq('email', editing) : await S.from('members').insert({ ...o, created_by: me.id });
+        if (error) { e.target.disabled = false; return toast(/duplicate|unique/i.test(error.message) ? 'This email already has access.' : error.message, 1) }
+        if (!editing && g('mklink')?.checked) {
+          if (!o.whatsapp) toast('Access given. Add a WhatsApp number to create their invite link.', 1);
+          else {
+            let code = slug(o.display_name || o.email.split('@')[0]) || 'family', n = 1;
+            while (referrers.some(f => f.code === code)) code = slug((o.display_name || 'family')).slice(0, 28) + '-' + (++n);
+            const { error: e2 } = await S.from('referrers').insert({ code, display_name: o.display_name || o.email.split('@')[0], relation: o.relation, side: o.side, whatsapp: o.whatsapp, owner_email: o.email, created_by: me.id });
+            if (e2) toast('Access given, but the link failed: ' + e2.message, 1);
+          }
+        }
+        e.target.disabled = false;
+        await audit(editing ? 'update' : 'grant', 'members', o.email, { role: o.role }); toast(editing ? 'Saved' : `${o.email} can sign in now`); await loadContext(); show();
+      };
+      const rm = d.querySelector('[data-rm]');
+      if (rm) rm.onclick = async () => { if (!confirm(`Remove access for ${d.dataset.email}? Their invite links keep working.`)) return; const { error } = await S.from('members').delete().eq('email', d.dataset.email); if (error) return toast(error.message, 1); await audit('revoke', 'members', d.dataset.email); toast('Access removed'); show() };
+    });
+  },
+
+  async profile(m) {
+    const mine = myRefs();
+    m.innerHTML = head('My profile', 'How you appear to guests you invite.') +
+      `<div class="card"><div class="form-grid"><label class="f">Your name<input id="p-name" value="${esc(member?.display_name || me.display_name || '')}"></label><label class="f">WhatsApp (with country code)<input id="p-wa" inputmode="tel" value="${esc(member?.whatsapp || '')}" placeholder="919876543210"></label><label class="f">Access<input value="${esc(ROLE[me.role])}" readonly></label><label class="f">Side<input value="${esc(member?.side ? SIDE[member.side] : 'Not set')}" readonly></label><label class="f">Relation<input value="${esc(relLabel(member?.relation) || 'Not set')}" readonly></label><label class="f">Google account<input value="${esc(user.email)}" readonly></label></div>
+      ${mine.length ? `<label class="check" style="margin-top:.8rem"><input type="checkbox" id="p-apply" checked>Use this WhatsApp number on my ${mine.length} invite link${mine.length > 1 ? 's' : ''}</label>` : ''}
+      <div class="row" style="margin-top:.8rem"><span class="spacer"></span><button class="btn" id="p-save" type="button">Save profile</button></div></div>`;
+    $('p-save').onclick = async e => {
+      const wa = digits($('p-wa').value) ? phoneIntl($('p-wa').value) : '';
+      if (wa && !/^[0-9]{11,15}$/.test(wa)) return toast('WhatsApp needs the country code, e.g. 919876543210', 1);
       e.target.disabled = true;
-      const { error } = await S.from('admin_allowlist').upsert({ email, role: $('a-role').value, display_name: $('a-name').value.trim() || null, added_by: me.id });
-      e.target.disabled = false; if (error) return toast(error.message, 1);
-      await audit('grant', 'admin_allowlist', email); toast('Access given. They can sign in with Google now.'); show();
+      const { error } = await S.rpc('update_my_member', { p_display_name: $('p-name').value, p_whatsapp: wa });
+      if (!error && wa && $('p-apply')?.checked) await S.from('referrers').update({ whatsapp: wa }).eq('owner_user_id', user.id);
+      e.target.disabled = false; if (error) return toast(missing(error) ? 'Run the latest database migration first.' : error.message, 1);
+      toast('Saved'); await loadContext(); $('me-name').textContent = member?.display_name || user.email; show();
     };
-    m.querySelectorAll('[data-rm]').forEach(b => b.onclick = async () => { if (!confirm(`Remove admin access for ${b.dataset.rm}?`)) return; const { error } = await S.from('admin_allowlist').delete().eq('email', b.dataset.rm); if (error) return toast(error.message, 1); await audit('revoke', 'admin_allowlist', b.dataset.rm); toast('Access removed'); show() });
   }
 };
 })();
 </script>
-</body>
-</html>
+</body></html>

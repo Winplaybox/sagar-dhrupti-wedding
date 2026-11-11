@@ -9,15 +9,29 @@ A multilingual (Gujarati, Hindi, Marathi, English) wedding card website with an 
 | `site/config.js` | Supabase URL/publishable key, default ref and WhatsApp numbers (fallbacks; editable in admin) |
 | `supabase/migrations/` | Database schema; run the newest file once in the Supabase SQL editor |
 
-## Ref links
+## Invite links (who invited whom)
 
-| Link | Side | RSVP replies go to |
+Every family member gets their own link: `/?ref=CODE`. The code decides
+- the line guests see in the hero (“Groom's side · Invited by Sagar's Mummy”),
+- which side's events they see (groom-only, bride-only and shared events),
+- whose WhatsApp receives the RSVP and the “Message us” button,
+- and which dashboard the RSVP shows up in.
+
+| Link | Side | Replies go to |
 | --- | --- | --- |
-| `/` or `/?ref=sags` | Groom's side | WhatsApp +91 73873 22548 |
-| `/?ref=drups` | Bride's side | WhatsApp +91 88284 76929 |
+| `/` or `/?ref=sags` | Groom | +91 73873 22548 |
+| `/?ref=drups` | Bride | +91 88284 76929 |
+| `/?ref=<code>` | Set per link | That person's WhatsApp |
 
-The ref decides whose WhatsApp receives the RSVP and the floating “Message us” button, which family is named first, and is saved with the RSVP so the admin can filter by side.
-Extra URL options: `&to=Ramesh%20Kaka` greets a guest by name, `&c=CODE` uses a guest invite code from the admin, `&lang=gu|hi|mr|en` picks the language.
+Extra options: `&to=Ramesh%20Kaka` greets a guest by name, `&c=CODE` uses a guest invite code, `&lang=gu|hi|mr|en` picks the language.
+
+## Roles (`/admin`, Google sign-in)
+
+| Role | Can do |
+| --- | --- |
+| Super admin | Everything, including adding admins and other super admins |
+| Admin | Edit the whole invitation (events, sections, text, gallery, couple & venue), all links and RSVPs, add family members |
+| Family member | Create their own invite links, add guests, see RSVPs from their links, edit their profile |
 
 ## Run locally
 
