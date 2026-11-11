@@ -207,6 +207,19 @@ input:focus,textarea:focus{border-color:var(--sindoor);outline:none;box-shadow:0
 .diya .flame{transform-origin:50% 100%;animation:flick 1.6s ease-in-out infinite alternate}
 @keyframes flick{to{transform:scale(.9,1.08) rotate(2deg)}}
 
+.custom .body p{margin:0 0 1rem;text-align:center}
+.custom .body p:last-child{margin-bottom:0}
+.custom figure{margin:0 auto 1.6rem;max-width:520px;border-radius:200px 200px 18px 18px;overflow:hidden;box-shadow:0 0 0 4px var(--gulabi),0 0 0 6px var(--haldi)}
+.custom figure img{width:100%;height:auto}
+.custom.quote{background:var(--night);color:#ffe2b8;text-align:center}
+.custom.quote h2{color:var(--haldi);font-size:clamp(1.3rem,4vw,1.7rem)}
+.custom.quote .body p{font-size:clamp(1.25rem,4vw,1.6rem);line-height:1.6;font-style:italic;color:#fff3d4}
+.custom ul.names-list{list-style:none;margin:0 auto;padding:0;max-width:480px;display:grid;gap:.15rem}
+.custom ul.names-list li{display:flex;justify-content:space-between;gap:1rem;padding:.55rem 0;border-bottom:1px dashed #b3122e33}
+.custom ul.names-list li b{font-weight:600;color:var(--night)}
+.custom ul.names-list li span{color:#7c4652;text-align:right}
+.custom ul.names-list li.solo{justify-content:center}
+
 /* footer */
 footer{background:var(--night);color:#ffe2b8;text-align:center;padding:3.5rem 1.25rem calc(6rem + env(safe-area-inset-bottom))}
 footer .names-s{font:400 clamp(2rem,7vw,2.8rem)/1.2 var(--display);color:var(--haldi);margin:0 0 .4rem}
@@ -280,10 +293,10 @@ footer small{display:block;margin-top:1.4rem;opacity:.7;font-size:.85rem}
   <a class="scroll-cue" href="#couple" aria-label="Scroll"></a>
 </header>
 
-<main>
+<main id="main">
   <div class="border-band" aria-hidden="true"></div>
 
-  <section class="page" id="couple">
+  <section class="page" id="couple" data-key="couple">
     <div class="inner">
       <svg class="motif" viewBox="0 0 120 24" aria-hidden="true"><path d="M0 12h44M76 12h44" stroke="currentColor"/><path d="M60 2c6 6 6 14 0 20c-6-6-6-14 0-20z" fill="currentColor"/><circle cx="48" cy="12" r="2.5" fill="currentColor"/><circle cx="72" cy="12" r="2.5" fill="currentColor"/></svg>
       <h2 id="t-couple"></h2>
@@ -292,7 +305,7 @@ footer small{display:block;margin-top:1.4rem;opacity:.7;font-size:.85rem}
     </div>
   </section>
 
-  <section class="page" id="countdown">
+  <section class="page" id="countdown" data-key="countdown">
     <div class="layer bgm" data-depth=".12" id="bgm" aria-hidden="true"></div>
     <div class="inner">
       <h2 id="t-count"></h2>
@@ -301,7 +314,7 @@ footer small{display:block;margin-top:1.4rem;opacity:.7;font-size:.85rem}
     </div>
   </section>
 
-  <section class="page" id="events">
+  <section class="page" id="events" data-key="events">
     <div class="inner">
       <svg class="motif" viewBox="0 0 120 24" aria-hidden="true"><path d="M0 12h44M76 12h44" stroke="currentColor"/><path d="M60 2c6 6 6 14 0 20c-6-6-6-14 0-20z" fill="currentColor"/><circle cx="48" cy="12" r="2.5" fill="currentColor"/><circle cx="72" cy="12" r="2.5" fill="currentColor"/></svg>
       <h2 id="t-events"></h2>
@@ -310,7 +323,7 @@ footer small{display:block;margin-top:1.4rem;opacity:.7;font-size:.85rem}
     </div>
   </section>
 
-  <section class="page" id="venue">
+  <section class="page" id="venue" data-key="venue">
     <div class="inner wide venue">
       <div class="map" id="map"></div>
       <div class="venue-card">
@@ -322,13 +335,11 @@ footer small{display:block;margin-top:1.4rem;opacity:.7;font-size:.85rem}
     </div>
   </section>
 
-  <section class="page" id="gallery-s" hidden>
+  <section class="page" id="gallery-s" data-key="gallery" hidden>
     <div class="inner wide"><h2 id="t-gallery"></h2><div class="gallery" id="gallery"></div></div>
   </section>
 
-  <div class="border-band" aria-hidden="true"></div>
-
-  <section class="page" id="rsvp">
+  <section class="page" id="rsvp" data-key="rsvp">
     <div class="inner">
       <h2 id="t-rsvp"></h2>
       <p class="lede" id="t-rsvp-lede"></p>
@@ -388,7 +399,7 @@ const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /* ───────── Copy in four languages ───────── */
 const I = {
-  en: { loc:'en-IN', bless:'॥ Shri Ganeshaya Namah ॥', open:'Tap to open your invitation', side_groom:"From the groom's family", side_bride:"From the bride's family", dear:'Dear {n},',
+  en: { loc:'en-IN', bless:'॥ Shri Ganeshaya Namah ॥', open:'Tap to open your invitation', side_groom:"Groom's side", side_bride:"Bride's side", invited_by:'Invited by {n}', dear:'Dear {n},',
     invite:'With the blessings of our elders, we joyfully invite you to celebrate the wedding of', groom:'Sagar', bride:'Dhrupti', amp:'&',
     couple:'Two families, one celebration', couple_lede:'Your presence and blessings will make our day complete.', groomLbl:'The groom', brideLbl:'The bride',
     count:'Counting down to the pheras', d:'Days', h:'Hours', m:'Minutes', s:'Seconds', ics:'Save the date to my calendar',
@@ -403,7 +414,7 @@ const I = {
     wa:'Send on WhatsApp', again:'Edit my reply', chat:'Message us', who_groom:"Sagar's family", who_bride:"Dhrupti's family",
     foot_bless:'With love and blessings from both families', made:'We look forward to welcoming you.',
     wa_head:"RSVP · Sagar & Dhrupti's wedding", wa_name:'Name', wa_att:'Attendance', wa_guests:'Guests', wa_events:'Celebrations', wa_food:'Food', wa_msg:'Message', wa_hi:'Namaste! I have a question about the wedding.' },
-  gu: { loc:'gu-IN', bless:'॥ શ્રી ગણેશાય નમઃ ॥', open:'આમંત્રણ ખોલવા અહીં સ્પર્શ કરો', side_groom:'વર પક્ષ તરફથી', side_bride:'કન્યા પક્ષ તરફથી', dear:'પ્રિય {n},',
+  gu: { loc:'gu-IN', bless:'॥ શ્રી ગણેશાય નમઃ ॥', open:'આમંત્રણ ખોલવા અહીં સ્પર્શ કરો', side_groom:'વર પક્ષ', side_bride:'કન્યા પક્ષ', invited_by:'{n} તરફથી સ્નેહભર્યું આમંત્રણ', dear:'પ્રિય {n},',
     invite:'વડીલોના આશીર્વાદ સાથે, આપને સહર્ષ લગ્નોત્સવમાં પધારવા આમંત્રણ', groom:'સાગર', bride:'ધ્રુપ્તિ', amp:'સંગ',
     couple:'બે પરિવાર, એક ઉત્સવ', couple_lede:'આપની હાજરી અને આશીર્વાદથી અમારો દિવસ પૂર્ણ થશે.', groomLbl:'વરરાજા', brideLbl:'કન્યા',
     count:'ફેરાને હવે બાકી', d:'દિવસ', h:'કલાક', m:'મિનિટ', s:'સેકન્ડ', ics:'તારીખ કૅલેન્ડરમાં સાચવો',
@@ -418,7 +429,7 @@ const I = {
     wa:'WhatsApp પર મોકલો', again:'જવાબ બદલો', chat:'સંદેશ મોકલો', who_groom:'સાગરના પરિવાર', who_bride:'ધ્રુપ્તિના પરિવાર',
     foot_bless:'બંને પરિવાર તરફથી સ્નેહ અને આશીર્વાદ', made:'આપના સ્વાગત માટે આતુર છીએ.',
     wa_head:'RSVP · સાગર અને ધ્રુપ્તિના લગ્ન', wa_name:'નામ', wa_att:'હાજરી', wa_guests:'મહેમાન', wa_events:'પ્રસંગો', wa_food:'ભોજન', wa_msg:'સંદેશ', wa_hi:'નમસ્તે! લગ્ન વિશે એક પ્રશ્ન છે.' },
-  hi: { loc:'hi-IN', bless:'॥ श्री गणेशाय नमः ॥', open:'निमंत्रण खोलने के लिए यहाँ छुएँ', side_groom:'वर पक्ष की ओर से', side_bride:'कन्या पक्ष की ओर से', dear:'प्रिय {n},',
+  hi: { loc:'hi-IN', bless:'॥ श्री गणेशाय नमः ॥', open:'निमंत्रण खोलने के लिए यहाँ छुएँ', side_groom:'वर पक्ष', side_bride:'कन्या पक्ष', invited_by:'{n} की ओर से सप्रेम निमंत्रण', dear:'प्रिय {n},',
     invite:'बड़ों के आशीर्वाद से, हम आपको सहर्ष विवाह उत्सव में आमंत्रित करते हैं', groom:'सागर', bride:'ध्रुप्ति', amp:'संग',
     couple:'दो परिवार, एक उत्सव', couple_lede:'आपकी उपस्थिति और आशीर्वाद से हमारा दिन पूरा होगा।', groomLbl:'दूल्हा', brideLbl:'दुल्हन',
     count:'फेरों में अब बाकी', d:'दिन', h:'घंटे', m:'मिनट', s:'सेकंड', ics:'तारीख कैलेंडर में सेव करें',
@@ -433,7 +444,7 @@ const I = {
     wa:'WhatsApp पर भेजें', again:'जवाब बदलें', chat:'संदेश भेजें', who_groom:'सागर के परिवार', who_bride:'ध्रुप्ति के परिवार',
     foot_bless:'दोनों परिवारों की ओर से स्नेह और आशीर्वाद', made:'आपके स्वागत की प्रतीक्षा है।',
     wa_head:'RSVP · सागर और ध्रुप्ति का विवाह', wa_name:'नाम', wa_att:'उपस्थिति', wa_guests:'मेहमान', wa_events:'कार्यक्रम', wa_food:'भोजन', wa_msg:'संदेश', wa_hi:'नमस्ते! विवाह के बारे में एक सवाल है।' },
-  mr: { loc:'mr-IN', bless:'॥ श्री गणेशाय नमः ॥', open:'निमंत्रण उघडण्यासाठी येथे स्पर्श करा', side_groom:'वर पक्षाकडून', side_bride:'वधू पक्षाकडून', dear:'प्रिय {n},',
+  mr: { loc:'mr-IN', bless:'॥ श्री गणेशाय नमः ॥', open:'निमंत्रण उघडण्यासाठी येथे स्पर्श करा', side_groom:'वर पक्ष', side_bride:'वधू पक्ष', invited_by:'{n} यांच्याकडून सप्रेम निमंत्रण', dear:'प्रिय {n},',
     invite:'वडीलधाऱ्यांच्या आशीर्वादाने, आम्ही आपल्याला सहर्ष विवाह सोहळ्यास आमंत्रित करतो', groom:'सागर', bride:'ध्रुप्ति', amp:'संग',
     couple:'दोन कुटुंबे, एक सोहळा', couple_lede:'आपली उपस्थिती आणि आशीर्वाद आमचा दिवस पूर्ण करतील.', groomLbl:'नवरदेव', brideLbl:'नवरी',
     count:'फेऱ्यांना आता बाकी', d:'दिवस', h:'तास', m:'मिनिटे', s:'सेकंद', ics:'तारीख कॅलेंडरमध्ये जतन करा',
@@ -457,14 +468,17 @@ const store = { get: k => { try { return localStorage.getItem(k) } catch { retur
 let L = I[qs.get('lang')] ? qs.get('lang') : (I[store.get('l')] ? store.get('l') : 'gu');
 let refs = { ...C.refs };
 let ref = C.resolveRef(qs.get('ref'), refs);
+const askedRef = C.normalizeCode(qs.get('ref'));
 let settings = { couple: { ...C.couple }, venue: { ...C.venue } };
-let events = C.events.slice();
+let allEvents = C.events.slice(), events = [], sections = [];
 let guestName = (qs.get('to') || '').trim().slice(0, 60);
 const inviteCode = (qs.get('c') || '').trim().toUpperCase().slice(0, 24);
 let lastWa = '';
-const T = (k, vars) => { let s = (I[L][k] ?? I.en[k] ?? ''); if (vars) for (const v in vars) s = s.replace('{' + v + '}', vars[v]); return s };
+const T = (k, vars) => { const ov = settings.copy && settings.copy[k]; let s = ((ov && ov[L]) || I[L][k] || I.en[k] || ''); if (vars) for (const v in vars) s = s.replace('{' + v + '}', vars[v]); return s };
 const pick = o => (o && (o[L] || o.en || Object.values(o)[0])) || '';
 const refInfo = () => refs[ref] || refs[C.defaultRef];
+const side = () => refInfo().side === 'bride' ? 'bride' : 'groom';
+const filterEvents = () => { events = allEvents.filter(e => !e.audience || e.audience === 'both' || e.audience === side()) };
 const isBrideSide = () => refInfo().side === 'bride';
 const waNumber = () => String(refInfo().whatsapp || '').replace(/\D/g, '');
 const waLink = text => 'https://wa.me/' + waNumber() + '?text=' + encodeURIComponent(text);
@@ -476,6 +490,9 @@ function names() {
   return isBrideSide() ? [bride, groom] : [groom, bride];
 }
 function weddingTime() {
+  const main = allEvents.find(e => e.event_type === 'wedding') || events[0];
+  if (main && main.starts_at) return new Date(main.starts_at).getTime();
+  if (main && main.event_date) return new Date(main.event_date + 'T00:00:00+05:30').getTime();
   const first = events.find(e => e.starts_at);
   if (first) return new Date(first.starts_at).getTime();
   const d = settings.couple?.wedding_date || C.couple.wedding_date;
@@ -510,6 +527,11 @@ $('toran').innerHTML = toranSVG();
 const ICON = {
   wedding: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3c3 4 3 7 0 10c-3-3-3-6 0-10z" fill="currentColor"/><path d="M5 15h14l-2 6H7z"/></svg>',
   reception: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17l-5.9 3 1.2-6.5L2.5 8.9 9.1 8z" fill="currentColor"/></svg>',
+  haldi: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3c4 5 6 8 6 11a6 6 0 0 1-12 0c0-3 2-6 6-11z"/></svg>',
+  mehndi: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21c-5-3-8-7-8-11a4 4 0 0 1 8-1 4 4 0 0 1 8 1c0 4-3 8-8 11z" fill="currentColor"/></svg>',
+  sangeet: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 17a3 3 0 1 1-2-2.8V4l12-2v13a3 3 0 1 1-2-2.8V6L9 7.5z"/></svg>',
+  vastu: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3 2 11h3v9h5v-6h4v6h5v-9h3z"/></svg>',
+  puja: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c3 4 3 7 0 9-3-2-3-5 0-9zM3 14h18c-1 5-5 7-9 7s-8-2-9-7z"/></svg>',
   other: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5" fill="currentColor"/></svg>'
 };
 const knotSVG = '<svg class="knot" viewBox="0 0 60 60" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><circle cx="22" cy="30" r="14"/><circle cx="38" cy="30" r="14"/></svg>';
@@ -521,12 +543,14 @@ function draw() {
   const df = new Intl.DateTimeFormat(T('loc'), { dateStyle: 'full', timeZone: 'Asia/Kolkata' });
   const set = (id, k, v) => { $(id).textContent = T(k, v) };
   set('seal-label', 'open'); set('t-bless', 'bless'); set('t-invite', 'invite');
-  $('t-side').textContent = T(isBrideSide() ? 'side_bride' : 'side_groom');
+  const ri = refInfo();
+  $('t-side').textContent = T(isBrideSide() ? 'side_bride' : 'side_groom') + ' · ' + T('invited_by', { n: ri.display_name || ri.label || '' });
   if (guestName) { $('t-dear').hidden = false; $('t-dear').textContent = T('dear', { n: guestName }); $('gate-to').textContent = T('dear', { n: guestName }).replace(/,$/, '') } else { $('t-dear').hidden = true; $('gate-to').textContent = '' }
   $('names').innerHTML = `<span class="n">${esc(a)}</span><span class="amp">${esc(T('amp'))}</span><span class="n">${esc(b)}</span>`;
   $('when').textContent = df.format(date);
   document.title = `${a} & ${b} · ${new Intl.DateTimeFormat('en-IN', { dateStyle: 'long', timeZone: 'Asia/Kolkata' }).format(date)}`;
 
+  renderSections();
   set('t-couple', 'couple'); set('t-couple-lede', 'couple_lede');
   const c = settings.couple || {};
   const person = (nm, lbl, photo) => `<div class="person"><div class="medal">${photo ? `<img src="${esc(photo)}" alt="${esc(nm)}" loading="lazy">` : `<b aria-hidden="true">${esc([...nm][0] || '')}</b>`}</div><h3>${esc(nm)}</h3><p>${esc(lbl)}</p></div>`;
@@ -539,7 +563,7 @@ function draw() {
   $('t-events-lede').hidden = events.every(e => e.starts_at);
   $('timeline').innerHTML = events.map(e => {
     const when = e.starts_at ? df.format(new Date(e.starts_at)) + ' · ' + tf.format(new Date(e.starts_at)) : (e.event_date ? df.format(new Date(e.event_date + 'T00:00:00+05:30')) : T('time_tba'));
-    return `<li><span class="dot" aria-hidden="true">${ICON[e.event_type] || ICON[e.slug === 'reception' ? 'reception' : 'wedding']}</span><h3>${esc(pick(e.title))}</h3><time>${esc(when)}</time>${pick(e.description) ? `<p>${esc(pick(e.description))}</p>` : ''}${e.venue_name ? `<small>${esc(e.venue_name)}</small>` : ''}</li>`;
+    return `<li><span class="dot" aria-hidden="true">${ICON[e.event_type] || ICON.other}</span><h3>${esc(pick(e.title))}</h3><time>${esc(when)}</time>${pick(e.description) ? `<p>${esc(pick(e.description))}</p>` : ''}${e.venue_name ? `<small>${esc(e.venue_name)}</small>` : ''}</li>`;
   }).join('');
 
   const v = settings.venue || {};
@@ -550,7 +574,7 @@ function draw() {
 
   set('t-rsvp', 'rsvp'); set('t-rsvp-lede', 'rsvp_lede');
   ['name', 'phone', 'email', 'diet', 'note', 'guests', 'which', 'consent'].forEach(k => set('l-' + k, k)); set('l-att', 'att');
-  const who = T(isBrideSide() ? 'who_bride' : 'who_groom');
+  const who = refInfo().display_name || T(isBrideSide() ? 'who_bride' : 'who_groom');
   set('send', 'send'); set('t-sendnote', 'sendnote', { who });
   const att = document.querySelector('[name=attendance]:checked')?.value || 'attending';
   $('att').innerHTML = [['attending', 'yes'], ['not_attending', 'no'], ['maybe', 'maybe']].map(([v, k]) => `<label class="chip"><input type="radio" name="attendance" value="${v}" ${v === att ? 'checked' : ''}><span>${esc(T(k))}</span></label>`).join('');
@@ -573,6 +597,35 @@ function syncAttendance() {
   const v = document.querySelector('[name=attendance]:checked')?.value;
   const off = v === 'not_attending';
   $('guests-row').hidden = off; $('ev-row').hidden = off || events.length < 2;
+}
+
+/* ───────── Section order, visibility and custom sections ───────── */
+function renderSections() {
+  const main = $('main'), lay = settings.layout || {};
+  main.querySelectorAll('.custom').forEach(n => n.remove());
+  const items = [];
+  main.querySelectorAll('section[data-key]').forEach(el => {
+    const k = el.dataset.key, conf = lay[k] || {};
+    const order = typeof conf === 'number' ? conf : (conf.order ?? C.layout[k] ?? 99);
+    if (k !== 'gallery') el.hidden = !!conf.hidden;
+    items.push([order, el]);
+  });
+  for (const sct of sections) {
+    if (sct.audience && sct.audience !== 'both' && sct.audience !== side()) continue;
+    const el = document.createElement('section');
+    el.className = 'page custom ' + (sct.kind || 'text');
+    const title = pick(sct.title), body = pick(sct.body);
+    const paras = String(body || '').split(/\n{2,}/).filter(Boolean).map(p => `<p>${esc(p).replace(/\n/g, '<br>')}</p>`).join('');
+    let inner = '';
+    if (sct.kind === 'list') {
+      inner = `<ul class="names-list">${String(body || '').split('\n').map(l => l.trim()).filter(Boolean).map(l => { const [a, b] = l.split('|').map(x => x.trim()); return b ? `<li><b>${esc(a)}</b><span>${esc(b)}</span></li>` : `<li class="solo"><b>${esc(a)}</b></li>` }).join('')}</ul>`;
+    } else {
+      inner = (sct.kind === 'image' && sct.image_url ? `<figure><img src="${esc(sct.image_url)}" alt="${esc(title)}" loading="lazy" decoding="async"></figure>` : '') + `<div class="body">${paras}</div>`;
+    }
+    el.innerHTML = `<div class="inner">${sct.kind === 'quote' ? '' : '<svg class="motif" viewBox="0 0 120 24" aria-hidden="true"><path d="M0 12h44M76 12h44" stroke="currentColor"/><path d="M60 2c6 6 6 14 0 20c-6-6-6-14 0-20z" fill="currentColor"/><circle cx="48" cy="12" r="2.5" fill="currentColor"/><circle cx="72" cy="12" r="2.5" fill="currentColor"/></svg>'}${title ? `<h2>${esc(title)}</h2>` : ''}${inner}</div>`;
+    items.push([sct.sort_order ?? 35, el]);
+  }
+  items.sort((a, b) => a[0] - b[0]).forEach(([, el]) => main.appendChild(el));
 }
 
 /* language switcher */
@@ -725,27 +778,37 @@ $('again').addEventListener('click', () => { $('done').classList.remove('show');
 
 /* ───────── Data ───────── */
 const get = p => fetch(API + '/rest/v1/' + p, { headers: H, signal: timeout(10000) }).then(r => r.ok ? r.json() : null).catch(() => null);
+const rpc = (fn, body) => fetch(API + '/rest/v1/rpc/' + fn, { method: 'POST', headers: { ...H, 'Content-Type': 'application/json' }, body: JSON.stringify(body), signal: timeout(8000) }).then(r => r.ok ? r.json() : null).catch(() => null);
+const first = x => Array.isArray(x) ? x[0] : x;
 (async () => {
-  const [ev, st, gal, inv] = await Promise.all([
+  const [ev, st, gal, inv, secs] = await Promise.all([
     get('events?is_published=eq.true&order=sort_order,event_date'),
     get('site_settings?select=setting_key,value'),
     get('gallery_items?is_published=eq.true&order=sort_order'),
-    inviteCode ? fetch(API + '/rest/v1/rpc/get_invite', { method: 'POST', headers: { ...H, 'Content-Type': 'application/json' }, body: JSON.stringify({ p_code: inviteCode }), signal: timeout(8000) }).then(r => r.ok ? r.json() : null).catch(() => null) : null
+    inviteCode ? rpc('get_invite', { p_code: inviteCode }) : null,
+    get('site_sections?is_published=eq.true&order=sort_order')
   ]);
-  if (Array.isArray(ev) && ev.length) events = ev;
+  if (Array.isArray(ev) && ev.length) allEvents = ev;
+  if (Array.isArray(secs)) sections = secs;
   if (Array.isArray(st)) for (const s of st) {
-    if (s.setting_key === 'refs' && s.value && typeof s.value === 'object') { for (const k in s.value) refs[k] = { ...(refs[k] || {}), ...s.value[k] } }
+    if (s.setting_key === 'refs' && s.value && typeof s.value === 'object') { for (const k in s.value) refs[k] = { ...(refs[k] || {}), display_name: s.value[k].label, ...s.value[k] } }
     else settings[s.setting_key] = { ...(settings[s.setting_key] || {}), ...s.value };
   }
-  const g = Array.isArray(inv) ? inv[0] : inv;
-  if (g && g.full_name) { if (!guestName) guestName = g.full_name; if (!qs.get('ref') && g.ref_code) ref = C.resolveRef(g.ref_code, refs) }
-  ref = C.resolveRef(qs.get('ref') || ref, refs);
+  const g = first(inv);
+  if (g && g.full_name && !guestName) guestName = g.full_name;
+  /* Which family member's link was used: ?ref= wins, then the guest's own link. */
+  const code = askedRef || (g && g.ref_code) || '';
+  const r = first(await rpc('get_referrer', { p_code: code || C.defaultRef }));
+  if (r && r.code) refs[r.code] = r;
+  ref = C.resolveRef(code, refs);
+  filterEvents();
   if (Array.isArray(gal) && gal.length) {
     $('gallery-s').hidden = false;
     $('gallery').innerHTML = gal.map(i => `<figure><img loading="lazy" decoding="async" src="${esc(i.storage_path)}" alt="${esc(pick(i.alt_text) || pick(i.title))}"></figure>`).join('');
   }
   draw();
 })();
+filterEvents();
 draw();
 })();
 </script>

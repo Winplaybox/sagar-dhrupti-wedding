@@ -2,52 +2,59 @@
 
 Supabase project: `vpqlgywiqsgiqmczsjrn` (ap-south-1, Mumbai) · Site: `https://sagar-dhrupti-wedding.vercel.app`
 
-## 1. Run the database migration (once)
+## 1. Database (once, in order)
 
-Supabase dashboard → **SQL Editor** → paste and run
-`supabase/migrations/20261112000000_refs_and_google_admins.sql`.
+Supabase dashboard → **SQL Editor** → run each file, top to bottom:
 
-It adds:
-- `ref_code` on RSVPs and guests, and a `refs` site setting with both WhatsApp numbers
-- `submit_rsvp_v2` (stores the ref and links invite codes) and `get_invite` (name-only lookup for `?c=CODE`)
-- `admin_allowlist` + `claim_admin()` for Google sign-in admins
-- copies existing admins onto the allow-list
+1. `supabase/migrations/20261112000000_refs_and_google_admins.sql`
+2. `supabase/migrations/20261113000000_family_referrers_roles_sections.sql`
 
-Then make yourself super admin (use the Google account you will sign in with):
+Both are safe to run again. Together they add:
+- `members`: who can sign in (super_admin / admin / user), their side, relation and WhatsApp
+- `referrers`: one invite link per family member (`?ref=code`), owner, side, WhatsApp; `sags` and `drups` are created
+- `rsvps.referrer_id` / `guests.referrer_id`: who invited each guest
+- `events.audience` (both / groom / bride) and the groom-side Vastu (25 Dec 2026) and Haldi (1 Feb 2027) events
+- `site_sections`: custom sections on the invitation
+- `claim_access()`, `get_referrer()`, `submit_rsvp_v2()`, `update_my_member()` and Row Level Security for every role
+
+Then add the first people (emails are kept out of Git on purpose):
 
 ```sql
-insert into public.admin_allowlist(email, role) values ('your.name@gmail.com', 'super_admin')
-on conflict (email) do update set role = 'super_admin';
+insert into public.members(email, role, display_name, side) values
+  ('SUPER_ADMIN_EMAIL', 'super_admin', 'Super admin', null),
+  ('GROOM_EMAIL', 'admin', 'Sagar', 'groom')
+on conflict (email) do update set role = excluded.role, display_name = excluded.display_name, side = excluded.side;
+update public.referrers set owner_email = 'GROOM_EMAIL' where code = 'sags';
 ```
 
-Until the migration runs, the invitation still works: RSVPs fall back to the existing `submit-rsvp` Edge Function and WhatsApp routing works from `config.js`.
+Everyone else is added from the dashboard: **People & access**.
 
-## 2. Turn on Google sign-in
+## 2. Google sign-in
 
-1. **Google Cloud Console** → APIs & Services → Credentials → *Create credentials* → **OAuth client ID** → Web application.
+Reuse the existing Google Cloud project (the one used for the YouTube automation) or create a new one.
+
+1. **Google Cloud Console** → APIs & Services → **OAuth consent screen**: External, app name “Sagar & Dhrupti Wedding”, your email, then **Publish app**.
+2. **Credentials** → *Create credentials* → **OAuth client ID** → **Web application** (desktop clients from Colab will not work):
    - Authorised JavaScript origins: `https://sagar-dhrupti-wedding.vercel.app`
    - Authorised redirect URI: `https://vpqlgywiqsgiqmczsjrn.supabase.co/auth/v1/callback`
-   - Configure the OAuth consent screen (External, app name “Sagar & Dhrupti Wedding Admin”), publish it.
-2. **Supabase** → Authentication → Sign In / Providers → **Google** → enable, paste the Client ID and Client Secret, save.
-3. **Supabase** → Authentication → URL Configuration:
+3. **Supabase** → Authentication → **Sign In / Providers** → **Google** → enable, paste Client ID + Client Secret, save.
+4. **Supabase** → Authentication → **URL Configuration**:
    - Site URL: `https://sagar-dhrupti-wedding.vercel.app`
-   - Redirect URLs: add `https://sagar-dhrupti-wedding.vercel.app/admin` (and `http://localhost:8080/admin` for local testing; add a custom domain here too if you attach one).
+   - Redirect URLs: `https://sagar-dhrupti-wedding.vercel.app/admin` (add preview or custom domains here too)
 
-## How admin access works
+## How sign-in works
 
-1. Admin page → **Continue with Google**. Supabase handles the OAuth flow (PKCE) and returns to `/admin`.
-2. The page calls `claim_admin()`. If the verified Google email is on `admin_allowlist`, a profile is created with that role; otherwise the session is signed out with a clear message.
-3. Super admins add or remove people under **Admins** by email. Removing an email removes that person's admin profile immediately.
-4. All data access stays behind Row Level Security (`is_admin()` / `is_super_admin()`); the publishable key in the site cannot read guests or RSVPs.
+1. `/admin` → **Continue with Google** (Supabase OAuth with PKCE). The button first checks that the Google provider is on.
+2. The page calls `claim_access()`. A verified Google email found in `members` gets a profile with that role; links created for that email (`owner_email`) are attached to the account. Anyone else is signed straight out with a message.
+3. Removing a person in **People & access** removes their access immediately; their links keep working.
+4. Permissions are enforced in Postgres (RLS), not just hidden in the UI: family members can only read their own links, the RSVPs from those links and their guests.
 
-## Admin features
+## Editing the invitation
 
-- **Overview**: headcount, replies by side, share links, latest replies
-- **RSVPs**: search, filter by side/answer, reply on WhatsApp, CSV export (Excel-friendly UTF-8)
-- **Guests & invites**: personal `?ref=…&c=CODE` links, “Send invite on WhatsApp” to the guest's number
-- **Share links**: `?ref=sags` / `?ref=drups` links and a personal-link generator (`&to=Name`)
-- **Events**, **Gallery** (direct photo upload to the `wedding-gallery` bucket), **Settings** (WhatsApp numbers per ref, couple, venue), **Admins**
+- **Events**: one row per function with *Who sees it* (both / groom / bride), date, optional time and venue.
+- **Sections & text**: reorder or hide built-in sections (couple 10, countdown 20, events 30, venue 40, gallery 50, RSVP 60), add custom sections (text, photo, blessing, names list), override any heading in the four languages.
+- **Couple & venue**, **Gallery** (direct upload to the `wedding-gallery` bucket).
 
 ## Security notes
 
-Never put the service-role or `sb_secret_` key in `site/`, Git or Vercel env vars exposed to the browser. The CI checker fails the build if one appears.
+Never put the service-role or `sb_secret_` key in `site/`, Git or browser-exposed env vars. The build checker fails if one appears.

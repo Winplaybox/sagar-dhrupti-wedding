@@ -6,11 +6,13 @@ window.WEDDING = {
   supabaseUrl: 'https://vpqlgywiqsgiqmczsjrn.supabase.co',
   supabaseKey: 'sb_publishable_rbd02f4NJLvuUpC9aPVFvA_04iDRKpd',
 
-  /* ?ref=sags (default) or ?ref=drups decides whose WhatsApp receives messages. */
+  /* ?ref=CODE decides who invited the guest, which side they belong to and whose
+   * WhatsApp receives the RSVP. Family members' links live in public.referrers;
+   * these two are the built-in fallbacks. A missing or unknown ref uses defaultRef. */
   defaultRef: 'sags',
   refs: {
-    sags: { label: "Sagar's side", side: 'groom', whatsapp: '917387322548' },
-    drups: { label: "Dhrupti's side", side: 'bride', whatsapp: '918828476929' }
+    sags: { display_name: 'Sagar', relation: 'groom', side: 'groom', whatsapp: '917387322548' },
+    drups: { display_name: 'Dhrupti', relation: 'bride', side: 'bride', whatsapp: '918828476929' }
   },
 
   couple: { groom: 'Sagar', bride: 'Dhrupti', wedding_date: '2027-02-02' },
@@ -20,9 +22,15 @@ window.WEDDING = {
     maps_url: 'https://maps.app.goo.gl/VW8QESZdue5Ez8xu8'
   },
   events: [
-    { id: null, slug: 'wedding-ceremony', event_date: '2027-02-02', title: { en: 'Wedding & Pheras', gu: 'લગ્ન અને ફેરા', hi: 'विवाह एवं फेरे', mr: 'विवाह आणि फेरे' } },
-    { id: null, slug: 'reception', event_date: '2027-02-02', title: { en: 'Reception', gu: 'સ્વાગત સમારંભ', hi: 'स्वागत समारोह', mr: 'स्वागत समारंभ' } }
-  ]
+    { id: null, slug: 'groom-vastu', event_type: 'vastu', audience: 'groom', event_date: '2026-12-25', title: { en: 'Vastu Puja', gu: 'વાસ્તુ પૂજન', hi: 'वास्तु पूजन', mr: 'वास्तु पूजन' } },
+    { id: null, slug: 'groom-haldi', event_type: 'haldi', audience: 'groom', event_date: '2027-02-01', title: { en: 'Haldi', gu: 'પીઠી', hi: 'हल्दी', mr: 'हळद' } },
+    { id: null, slug: 'wedding-ceremony', event_type: 'wedding', audience: 'both', event_date: '2027-02-02', title: { en: 'Wedding & Pheras', gu: 'લગ્ન અને ફેરા', hi: 'विवाह एवं फेरे', mr: 'विवाह आणि फेरे' } },
+    { id: null, slug: 'reception', event_type: 'reception', audience: 'both', event_date: '2027-02-02', title: { en: 'Reception', gu: 'સ્વાગત સમારંભ', hi: 'स्वागत समारोह', mr: 'स्वागत समारंभ' } }
+  ],
+
+  /* Built-in sections and their default order. Admins can reorder or hide them and
+   * add custom sections in between (public.site_sections, sort_order). */
+  layout: { couple: 10, countdown: 20, events: 30, venue: 40, gallery: 50, rsvp: 60 }
 };
 
 /* Normalise a ref code from a URL or record. Unknown codes fall back to the default. */
@@ -30,4 +38,7 @@ window.WEDDING.resolveRef = function (code, refs) {
   const all = refs || window.WEDDING.refs;
   const c = String(code || '').trim().toLowerCase();
   return all[c] ? c : window.WEDDING.defaultRef;
+};
+window.WEDDING.normalizeCode = function (code) {
+  return String(code || '').trim().toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 32);
 };

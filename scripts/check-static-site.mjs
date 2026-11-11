@@ -10,6 +10,7 @@ const ctx = { window: {} };
 new Script(read('config.js')).runInNewContext(ctx);
 const W = ctx.window.WEDDING;
 if (W.defaultRef !== 'sags') fail('config.js: default ref must be sags');
+if (!W.layout || W.layout.rsvp !== 60) fail('config.js: layout defaults missing');
 if (W.refs.sags?.whatsapp !== '917387322548') fail('config.js: sags WhatsApp number changed');
 if (W.refs.drups?.whatsapp !== '918828476929') fail('config.js: drups WhatsApp number changed');
 if (W.resolveRef('DRUPS') !== 'drups' || W.resolveRef('') !== 'sags' || W.resolveRef('xyz') !== 'sags') fail('config.js: resolveRef fallback broken');
@@ -25,11 +26,11 @@ for (const file of ['index.html', 'admin.html']) {
 }
 
 const index = read('index.html');
-for (const needle of ['name="guest_name"', 'name="whatsapp_consent"', 'name="email"', 'name="dietary_notes"', 'submit_rsvp_v2', 'submit-rsvp', 'wa.me', "qs.get('ref')", '@media (min-width:760px)', 'prefers-reduced-motion']) {
+for (const needle of ['name="guest_name"', 'name="whatsapp_consent"', 'name="email"', 'name="dietary_notes"', 'submit_rsvp_v2', 'submit-rsvp', 'get_referrer', 'site_sections', 'invited_by', 'wa.me', "qs.get('ref')", '@media (min-width:760px)', 'prefers-reduced-motion']) {
   if (!index.includes(needle)) fail('index.html: missing ' + needle);
 }
 const admin = read('admin.html');
-for (const needle of ["provider: 'google'", 'claim_admin', 'admin_allowlist', '?ref=', '@media (max-width:900px)']) {
+for (const needle of ["provider: 'google'", 'claim_access', "from('members')", "from('referrers')", 'site_sections', '@media (max-width:900px)']) {
   if (!admin.includes(needle)) fail('admin.html: missing ' + needle);
 }
 if (/service_role|sb_secret_/i.test(index + admin + read('config.js'))) fail('A secret key appears in the site files');
