@@ -1,36 +1,40 @@
-import { execFileSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+// Validates the static production site in site/ before Vercel publishes it.
+import { readFileSync } from 'node:fs';
 import { Script } from 'node:vm';
 
-const unpackDir = mkdtempSync(join(tmpdir(), 'wedding-site-'));
-try {
-  execFileSync('unzip', ['-q', 'wedding-site-source.zip', '-d', unpackDir]);
-  for (const file of ['index.html', 'admin.html']) {
-    const html = readFileSync(join(unpackDir, file), 'utf8');
-    if (!html.toLowerCase().includes('<!doctype html>')) throw new Error(file + ': missing HTML doctype');
-    const scripts = [...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)]
-      .map((match) => match[1])
-      .filter((source) => source.trim());
-    for (const [index, source] of scripts.entries()) {
-      new Script(source, { filename: file + '#inline-' + (index + 1) });
-    }
-    console.log('Validated ' + file + ': ' + scripts.length + ' inline script(s)');
-  }
-  const publicHtml = readFileSync(join(unpackDir, 'index.html'), 'utf8');
-  for (const required of ['name="whatsapp_consent"', 'name="email"', 'name="dietary_notes"', 'submit-rsvp']) {
-    if (!publicHtml.includes(required)) throw new Error('index.html: missing ' + required);
-  }
-  const vercel = JSON.parse(readFileSync('vercel.json', 'utf8'));
-  if (vercel.outputDirectory !== 'dist' || !vercel.buildCommand.includes('wedding-site-source.zip') || !vercel.buildCommand.includes('scripts/apply-responsive-fixes.mjs')) {
-    throw new Error('vercel.json: static ZIP build configuration is missing');
-  }
-  if (!vercel.rewrites?.some((rule) => rule.source === '/admin' && rule.destination === '/admin.html')) {
-    throw new Error('vercel.json: missing /admin rewrite');
-  }
-  execFileSync(process.execPath, ['scripts/check-responsive.mjs']);
-  console.log('Static archive, RSVP fields, responsive layout and Vercel configuration are valid.');
-} finally {
-  rmSync(unpackDir, { recursive: true, force: true });
+const fail = (msg) => { console.error('✗ ' + msg); process.exit(1); };
+const read = (f) => readFileSync(new URL('../site/' + f, import.meta.url), 'utf8');
+
+new Script(read('config.js'), { filename: 'config.js' });
+const ctx = { window: {} };
+new Script(read('config.js')).runInNewContext(ctx);
+const W = ctx.window.WEDDING;
+if (W.defaultRef !== 'sags') fail('config.js: default ref must be sags');
+if (W.refs.sags?.whatsapp !== '917387322548') fail('config.js: sags WhatsApp number changed');
+if (W.refs.drups?.whatsapp !== '918828476929') fail('config.js: drups WhatsApp number changed');
+if (W.resolveRef('DRUPS') !== 'drups' || W.resolveRef('') !== 'sags' || W.resolveRef('xyz') !== 'sags') fail('config.js: resolveRef fallback broken');
+
+for (const file of ['index.html', 'admin.html']) {
+  const html = read(file);
+  if (!/^<!doctype html>/i.test(html)) fail(file + ': missing doctype');
+  if (!/name="viewport"/.test(html)) fail(file + ': missing viewport meta');
+  if (!html.includes('src="/config.js"')) fail(file + ': must load /config.js');
+  const scripts = [...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)].map((m) => m[1]).filter((s) => s.trim());
+  scripts.forEach((src, i) => new Script(src, { filename: `${file}#inline-${i + 1}` }));
+  console.log(`✓ ${file}: ${scripts.length} inline script(s) parse`);
 }
+
+const index = read('index.html');
+for (const needle of ['name="guest_name"', 'name="whatsapp_consent"', 'name="email"', 'name="dietary_notes"', 'submit_rsvp_v2', 'submit-rsvp', 'wa.me', "qs.get('ref')", '@media (min-width:760px)', 'prefers-reduced-motion']) {
+  if (!index.includes(needle)) fail('index.html: missing ' + needle);
+}
+const admin = read('admin.html');
+for (const needle of ["provider: 'google'", 'claim_admin', 'admin_allowlist', '?ref=', '@media (max-width:900px)']) {
+  if (!admin.includes(needle)) fail('admin.html: missing ' + needle);
+}
+if (/service_role|sb_secret_/i.test(index + admin + read('config.js'))) fail('A secret key appears in the site files');
+
+const vercel = JSON.parse(readFileSync(new URL('../vercel.json', import.meta.url), 'utf8'));
+if (vercel.outputDirectory !== 'dist' || !vercel.buildCommand.includes('cp -r site dist')) fail('vercel.json: build must copy site/ to dist/');
+if (!vercel.rewrites?.some((r) => r.source === '/admin' && r.destination === '/admin.html')) fail('vercel.json: missing /admin rewrite');
+console.log('✓ Static site, ref routing, Google admin login and Vercel config are valid.');

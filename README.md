@@ -1,25 +1,33 @@
-# Sagar & Dhrupti Wedding Website
+# Sagar & Dhrupti · Wedding invitation
 
-The production website is the multilingual static invitation and private admin console supplied in `wedding-site-source.zip`. Vercel extracts the two HTML entry points into `dist/` and serves that static output. The original Next.js implementation remains in the repository as a development/build baseline and continues to be checked by GitHub Actions.
+A multilingual (Gujarati, Hindi, Marathi, English) wedding card website with an admin console.
 
-## Production website
+| Path | What it is |
+| --- | --- |
+| `site/index.html` | Public invitation: sealed-card opening, jharokha parallax hero, countdown, events, venue map, gallery, RSVP |
+| `site/admin.html` | Admin console at `/admin`, Google sign-in |
+| `site/config.js` | Supabase URL/publishable key, default ref and WhatsApp numbers (fallbacks; editable in admin) |
+| `supabase/migrations/` | Database schema; run the newest file once in the Supabase SQL editor |
 
-- `wedding-site-source.zip` contains `index.html` and `admin.html` for the public invitation and admin console.
-- Public invitation: Gujarati, Hindi, English and Marathi; countdown, events, venue, gallery and RSVP.
-- Admin console: events, guest lists/invite links, RSVP records and CSV export, settings, gallery, content pages and role-managed admins.
-- Supabase Edge Function: existing `submit-rsvp` endpoint.
-- Vercel build: extracts the archive into `dist/`, then applies `styles/responsive-*.css` to both pages; `/admin` rewrites to the admin page.
-- Responsive layout: public invitation and admin console are tuned for phone, tablet and desktop widths; admin data tables scroll inside their own containers on small screens.
+## Ref links
 
-## Local development and validation
+| Link | Side | RSVP replies go to |
+| --- | --- | --- |
+| `/` or `/?ref=sags` | Groom's side | WhatsApp +91 73873 22548 |
+| `/?ref=drups` | Bride's side | WhatsApp +91 88284 76929 |
+
+The ref decides whose WhatsApp receives the RSVP and the floating “Message us” button, which family is named first, and is saved with the RSVP so the admin can filter by side.
+Extra URL options: `&to=Ramesh%20Kaka` greets a guest by name, `&c=CODE` uses a guest invite code from the admin, `&lang=gu|hi|mr|en` picks the language.
+
+## Run locally
 
 ```bash
-npm install
-npm run dev
+cd site && python3 -m http.server 8080
+# http://localhost:8080/?ref=drups  ·  http://localhost:8080/admin.html
 node scripts/check-static-site.mjs
-node scripts/check-responsive.mjs
 ```
 
-To update the production site, update the two HTML files, rebuild `wedding-site-source.zip` with those files at the archive root, and commit the archive. The CI verifier parses the inline JavaScript, checks required RSVP fields and Vercel routing, and validates the responsive breakpoints. The responsive styles are applied after ZIP extraction so the archive remains the canonical invitation content.
+Vercel runs the checker, copies `site/` to `dist/` and serves it; `/admin` rewrites to `admin.html`.
+The older Next.js scaffold in `src/` is not used in production and is kept only for CI.
 
-See [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for hosting, Supabase and first-admin setup. Never commit Supabase service-role keys or other secrets. The Supabase publishable key embedded in the static site is browser-safe by design.
+See [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for the one-time Supabase and Google sign-in setup.

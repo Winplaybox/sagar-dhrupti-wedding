@@ -1,0 +1,499 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#3b0918">
+<title>Wedding admin · Sagar & Dhrupti</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rozha+One&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="/config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+:root{--sindoor:#b3122e;--deep:#7d0a20;--haldi:#f2b705;--night:#3b0918;--paan:#1f6b4f;--bg:#fbf3f1;--card:#fff;--line:#eddcd8;--ink:#2a0610;--muted:#7a5a60;--ok:#1f8f4e;--r:12px;
+  --dots:radial-gradient(circle,var(--haldi) 1.2px,transparent 1.7px)}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;font:15px/1.5 Inter,system-ui,-apple-system,'Segoe UI',sans-serif;background:var(--bg);color:var(--ink);min-width:320px}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--haldi);outline-offset:2px}
+[hidden]{display:none!important}
+h1,h2,h3{margin:0;line-height:1.25}
+.display{font-family:'Rozha One',serif;font-weight:400}
+
+/* login */
+#login{min-height:100svh;display:grid;place-items:center;padding:1.5rem;background:var(--dots) 0 0/16px 16px,var(--dots) 8px 8px/16px 16px,linear-gradient(160deg,var(--sindoor),var(--night))}
+.login-card{width:min(400px,100%);background:#fffaf6;border-radius:22px;padding:2.2rem 1.8rem;text-align:center;box-shadow:0 0 0 2px var(--haldi),0 30px 80px #0007}
+.seal{width:84px;height:84px;margin:0 auto 1rem;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 35% 30%,#ffe48a,var(--haldi) 50%,#c78e00);color:var(--deep);font:400 1.7rem/1 'Rozha One',serif;box-shadow:0 0 0 4px var(--deep)}
+.login-card h1{font:400 1.9rem/1.2 'Rozha One',serif;color:var(--sindoor)}
+.login-card p{color:var(--muted);margin:.5rem 0 1.6rem}
+.gbtn{display:flex;align-items:center;justify-content:center;gap:.75rem;width:100%;min-height:50px;border:1px solid #dadce0;border-radius:999px;background:#fff;font-weight:600;cursor:pointer;transition:box-shadow .2s}
+.gbtn:hover{box-shadow:0 2px 10px #0002}
+.gbtn svg{width:20px;height:20px}
+.login-err{color:var(--sindoor);font-weight:500;margin-top:1rem!important;min-height:1.2em}
+.login-foot{font-size:.82rem;margin-top:1.4rem!important}
+
+/* shell */
+.shell{display:grid;grid-template-columns:240px 1fr;min-height:100svh}
+aside{position:sticky;top:0;height:100svh;background:var(--night);color:#ffe2b8;display:flex;flex-direction:column;padding:1.2rem .8rem}
+.brand{display:flex;align-items:center;gap:.7rem;padding:0 .5rem 1.2rem;border-bottom:1px solid #ffffff1a;margin-bottom:.8rem}
+.brand .seal{width:40px;height:40px;margin:0;font-size:.9rem;box-shadow:0 0 0 2px var(--deep)}
+.brand b{display:block;font:400 1.15rem/1.1 'Rozha One',serif;color:var(--haldi)}
+.brand small{opacity:.7}
+#nav{display:flex;flex-direction:column;gap:2px}
+#nav button{display:flex;align-items:center;gap:.7rem;border:0;background:none;color:#ffe2b8;padding:.65rem .8rem;border-radius:10px;cursor:pointer;text-align:left;font-weight:500}
+#nav button svg{width:18px;height:18px;flex:none;opacity:.85}
+#nav button:hover{background:#ffffff10}
+#nav button[aria-current=page]{background:var(--haldi);color:var(--night)}
+.me{margin-top:auto;padding:.8rem .5rem 0;border-top:1px solid #ffffff1a;font-size:.85rem;display:grid;gap:.5rem}
+.me .who{display:flex;align-items:center;gap:.6rem;min-width:0}
+.me img{width:32px;height:32px;border-radius:50%;flex:none}
+.me .who span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.me em{font-style:normal;opacity:.65;font-size:.78rem;display:block}
+main{padding:clamp(1rem,3vw,2rem);max-width:1180px;width:100%;min-width:0}
+.head{display:flex;flex-wrap:wrap;gap:.8rem;align-items:center;justify-content:space-between;margin-bottom:1.2rem}
+.head h1{font:400 clamp(1.6rem,4vw,2.1rem)/1.15 'Rozha One',serif;color:var(--night)}
+.head p{margin:.2rem 0 0;color:var(--muted)}
+
+/* components */
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:1.2rem}
+.card+.card{margin-top:1rem}
+.card h2{font-size:1.05rem;margin-bottom:.2rem}
+.card .sub{color:var(--muted);margin:0 0 1rem;font-size:.9rem}
+.grid{display:grid;gap:1rem}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.8rem;margin-bottom:1rem}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:1rem}
+.stat b{display:block;font:400 2.1rem/1.1 'Rozha One',serif;color:var(--sindoor)}
+.stat span{color:var(--muted);font-size:.88rem}
+.stat.accent{background:var(--night);border-color:var(--night);color:#ffe2b8}
+.stat.accent b{color:var(--haldi)}
+.stat.accent span{color:#ffe2b8cc}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.45rem;min-height:40px;padding:.45rem .95rem;border:0;border-radius:10px;background:var(--sindoor);color:#fff;font-weight:600;cursor:pointer;text-decoration:none;white-space:nowrap}
+.btn svg{width:16px;height:16px;flex:none}
+.btn.sec{background:#fff;color:var(--ink);box-shadow:inset 0 0 0 1px var(--line)}
+.btn.sec:hover{box-shadow:inset 0 0 0 1px #c9a9a3}
+.btn.wa{background:var(--ok)}
+.btn.danger{background:#fff;color:var(--sindoor);box-shadow:inset 0 0 0 1px #f0c2c9}
+.btn.small{min-height:34px;padding:.3rem .7rem;font-size:.85rem}
+.btn[disabled]{opacity:.55;cursor:progress}
+.row{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center}
+.spacer{flex:1}
+label.f{display:grid;gap:.3rem;font-size:.85rem;font-weight:600;color:#4b2a31}
+input:not([type=checkbox]):not([type=radio]):not([type=file]),select,textarea{width:100%;min-height:42px;padding:.5rem .7rem;border:1px solid #dcc6c1;border-radius:10px;background:#fff;font-weight:400}
+textarea{min-height:90px;resize:vertical}
+textarea.code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.82rem}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--sindoor);box-shadow:0 0 0 3px #b3122e1f}
+.check{display:flex;align-items:center;gap:.5rem;font-weight:600;font-size:.9rem}
+.check input{width:18px;height:18px;accent-color:var(--sindoor)}
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.8rem}
+.i18n{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:.6rem;border:1px dashed var(--line);border-radius:12px;padding:.7rem;margin:0}
+.i18n legend{font-size:.85rem;font-weight:700;padding:0 .3rem}
+.pill{display:inline-flex;align-items:center;gap:.3rem;padding:.12rem .55rem;border-radius:999px;font-size:.78rem;font-weight:600;background:#f3e7e4;color:#5a2330;white-space:nowrap}
+.pill.attending{background:#dff3e7;color:#11603a}
+.pill.not_attending{background:#fbe0e3;color:#8f0f26}
+.pill.maybe{background:#fff2c7;color:#7a5600}
+.pill.groom{background:#e7eefc;color:#1d3f8f}
+.pill.bride{background:#fde4ef;color:#8f1d55}
+.copybox{display:flex;align-items:center;gap:.5rem;min-width:0;background:#faf3f1;border:1px solid var(--line);border-radius:10px;padding:.4rem .4rem .4rem .7rem}
+.copybox code{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.85rem}
+.refcard{display:grid;gap:.7rem;padding:1rem;border:1px solid var(--line);border-radius:14px;background:linear-gradient(#fff,#fffaf8)}
+.refcard header{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap}
+.refcard h3{font-size:1rem}
+.refcard .num{color:var(--muted);font-size:.88rem}
+.refs{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1rem}
+
+/* list rows (cards on mobile, table-like on desktop) */
+.toolbar{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:.8rem}
+.toolbar input,.toolbar select{width:auto;flex:1 1 180px}
+.list{display:grid;gap:.6rem}
+.item{background:#fff;border:1px solid var(--line);border-radius:14px;padding:.9rem 1rem;display:grid;gap:.5rem}
+.item .top{display:flex;gap:.6rem;align-items:flex-start;flex-wrap:wrap}
+.item .top h3{font-size:1rem;flex:1;min-width:140px}
+.item .meta{display:flex;flex-wrap:wrap;gap:.35rem .9rem;color:var(--muted);font-size:.86rem}
+.item .msg{background:#faf3f1;border-radius:10px;padding:.5rem .7rem;font-size:.9rem;white-space:pre-wrap}
+details.item>summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:.6rem;font-weight:600}
+details.item>summary::-webkit-details-marker{display:none}
+details.item>summary::after{content:"";margin-left:auto;width:9px;height:9px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);transition:transform .2s}
+details.item[open]>summary::after{transform:rotate(-135deg)}
+details.item[open]{box-shadow:0 10px 30px -18px #7d0a2066}
+.empty{text-align:center;color:var(--muted);padding:2.5rem 1rem;border:1.5px dashed var(--line);border-radius:14px}
+.gal{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:.8rem}
+.gal .item{padding:.6rem}
+.gal img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;background:#f3e7e4}
+.drop{border:2px dashed #dcb9b2;border-radius:14px;padding:1.4rem;text-align:center;background:#fffaf8;cursor:pointer}
+.drop.over{border-color:var(--sindoor);background:#fdeceb}
+.loading{color:var(--muted);padding:2rem 0}
+
+#toast{position:fixed;left:50%;bottom:max(1rem,env(safe-area-inset-bottom));transform:translate(-50%,150%);background:var(--night);color:#ffe2b8;padding:.7rem 1.1rem;border-radius:12px;box-shadow:0 10px 30px #0005;z-index:90;transition:transform .35s cubic-bezier(.22,1,.36,1);max-width:calc(100vw - 2rem)}
+#toast:not(.show){visibility:hidden}
+#toast.show{transform:translate(-50%,0)}
+#toast.err{background:var(--sindoor);color:#fff}
+
+@media (max-width:900px){
+  .shell{grid-template-columns:1fr}
+  aside{position:sticky;top:0;z-index:20;height:auto;flex-direction:row;flex-wrap:wrap;align-items:center;padding:.6rem .7rem;gap:.4rem}
+  .brand{border:0;padding:0;margin:0;flex:1}
+  .brand small{display:none}
+  #nav{order:3;flex-direction:row;width:100%;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding-bottom:2px}
+  #nav::-webkit-scrollbar{display:none}
+  #nav button{flex:none;padding:.5rem .75rem;font-size:.9rem}
+  .me{margin:0;padding:0;border:0;display:flex;align-items:center}
+  .me .who span,.me .who em{display:none}
+  .me .btn{min-height:34px;padding:.3rem .7rem}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<section id="login" hidden>
+  <div class="login-card">
+    <div class="seal" aria-hidden="true">S&amp;D</div>
+    <h1>Wedding admin</h1>
+    <p>Manage RSVPs, guests, share links and the invitation.</p>
+    <button class="gbtn" id="google" type="button">
+      <svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>
+      <span>Continue with Google</span>
+    </button>
+    <p class="login-err" id="login-err" role="alert"></p>
+    <p class="login-foot">Only Google accounts added by a super admin can open the console.</p>
+  </div>
+</section>
+
+<div class="shell" id="app" hidden>
+  <aside>
+    <div class="brand"><div class="seal" aria-hidden="true">S&amp;D</div><div><b>Sagar &amp; Dhrupti</b><small>Wedding admin</small></div></div>
+    <nav id="nav" aria-label="Sections"></nav>
+    <div class="me"><div class="who"><img id="me-img" alt="" hidden><span><span id="me-name"></span><em id="me-role"></em></span></div><button class="btn sec small" id="out" type="button">Sign out</button></div>
+  </aside>
+  <main id="main" tabindex="-1"></main>
+</div>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(() => {
+'use strict';
+const C = window.WEDDING;
+const S = supabase.createClient(C.supabaseUrl, C.supabaseKey, { auth: { flowType: 'pkce', detectSessionInUrl: true, persistSession: true, autoRefreshToken: true } });
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const LG = ['en', 'gu', 'hi', 'mr'];
+const SITE = location.origin;
+let me = null, user = null, tab = (location.hash.slice(1) || 'overview'), booted = false;
+let refs = { ...C.refs }, settingsCache = {};
+
+/* ───────── helpers ───────── */
+let toastT;
+function toast(text, bad) { const t = $('toast'); t.textContent = text; t.className = 'show' + (bad ? ' err' : ''); clearTimeout(toastT); toastT = setTimeout(() => t.className = '', 2800) }
+async function audit(action, entity_type, entity_id, metadata) { if (!me) return; await S.from('audit_logs').insert({ actor_id: me.id, action, entity_type, entity_id: entity_id ? String(entity_id) : null, metadata: metadata || {} }) }
+async function copy(text) { try { await navigator.clipboard.writeText(text); toast('Link copied') } catch { prompt('Copy this link', text) } }
+const digits = s => String(s || '').replace(/\D/g, '');
+function waTo(phone, text) { let d = digits(phone); if (d.length === 10) d = '91' + d; return 'https://wa.me/' + d + '?text=' + encodeURIComponent(text) }
+const waShare = text => 'https://wa.me/?text=' + encodeURIComponent(text);
+const link = (ref, extra) => { const u = new URL(SITE + '/'); u.searchParams.set('ref', ref); for (const k in extra || {}) if (extra[k]) u.searchParams.set(k, extra[k]); return u.toString() };
+const fmtDate = d => d ? new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Kolkata' }).format(new Date(d)) : '';
+const refLabel = r => (refs[r] && refs[r].label) || r || '—';
+const refSide = r => (refs[r] && refs[r].side) || '';
+function inviteText(url, name) {
+  const c = settingsCache.couple || C.couple, v = settingsCache.venue || C.venue;
+  const date = new Intl.DateTimeFormat('en-IN', { dateStyle: 'long', timeZone: 'Asia/Kolkata' }).format(new Date((c.wedding_date || C.couple.wedding_date) + 'T00:00:00+05:30'));
+  return `🙏 ${name ? 'Dear ' + name + ',\n' : ''}With the blessings of our elders, you are invited to the wedding of Sagar & Dhrupti.\n\n📅 ${date}\n📍 ${v.name || ''}\n\nOpen your invitation and RSVP:\n${url}`;
+}
+const I = {
+  copy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>',
+  wa: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm4.5 12.1c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1-.7.8-.8 1-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.3-.4.8-1.4.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.8 11.9 11.9 0 0 0 4.6 4c1.7.7 2.4.8 3.2.7.5-.1 1.5-.6 1.8-1.2s.2-1.1.1-1.2-.2-.2-.4-.3z"/></svg>',
+  open: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>',
+  dl: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m-5-5 5 5 5-5M4 21h16"/></svg>'
+};
+const NAV = [
+  ['overview', 'Overview', '<path d="M3 13h8V3H3zm10 8h8V11h-8zM3 21h8v-6H3zm10-18v6h8V3z"/>'],
+  ['rsvps', 'RSVPs', '<path d="M9 11l3 3 8-8M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/>'],
+  ['guests', 'Guests & invites', '<circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0M17 11h6M20 8v6"/>'],
+  ['links', 'Share links', '<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>'],
+  ['events', 'Events', '<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4m8-4v4"/>'],
+  ['gallery', 'Gallery', '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/>'],
+  ['settings', 'Settings', '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>'],
+  ['admins', 'Admins', '<path d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5z"/>', 'super']
+];
+
+/* ───────── auth ───────── */
+function showLogin(msg) { $('app').hidden = true; $('login').hidden = false; $('login-err').textContent = msg || ''; booted = false; me = null }
+$('google').onclick = async () => {
+  $('google').disabled = true; $('login-err').textContent = '';
+  const { error } = await S.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: SITE + '/admin', queryParams: { prompt: 'select_account' } } });
+  if (error) { $('google').disabled = false; $('login-err').textContent = error.message.includes('provider is not enabled') ? 'Google sign-in is not switched on in Supabase yet. See docs/DEPLOYMENT.md → Google sign-in.' : error.message }
+};
+$('out').onclick = async () => { await S.auth.signOut(); showLogin() };
+
+async function boot(session) {
+  if (booted && me) return;
+  if (!session) return showLogin(new URLSearchParams(location.search).get('error_description') || '');
+  user = session.user; booted = true;
+  if (location.search) history.replaceState(null, '', location.pathname + location.hash);
+  let profile = null;
+  const r = await S.rpc('claim_admin');
+  if (!r.error) profile = Array.isArray(r.data) ? r.data[0] : r.data;
+  else { const p = await S.from('profiles').select('*').eq('id', user.id).maybeSingle(); profile = p.data }
+  if (!profile) { await S.auth.signOut(); return showLogin(`${user.email} doesn't have admin access. Ask a super admin to add this email under Admins.`) }
+  me = profile;
+  $('login').hidden = true; $('app').hidden = false;
+  const avatar = user.user_metadata?.avatar_url;
+  if (avatar) { $('me-img').src = avatar; $('me-img').hidden = false }
+  $('me-name').textContent = me.display_name || user.email; $('me-role').textContent = (me.role === 'super_admin' ? 'Super admin' : 'Admin') + ' · ' + user.email;
+  await loadSettings(); show();
+}
+S.auth.onAuthStateChange((event, session) => {
+  if (event === 'SIGNED_OUT') return showLogin();
+  if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN') setTimeout(() => boot(session), 0);
+});
+
+async function loadSettings() {
+  const { data } = await S.from('site_settings').select('*');
+  settingsCache = {}; refs = { ...C.refs };
+  for (const s of data || []) { settingsCache[s.setting_key] = s.value; if (s.setting_key === 'refs') { refs = {}; for (const k in s.value) refs[k] = { ...(C.refs[k] || {}), ...s.value[k] } } }
+  if (!Object.keys(refs).length) refs = { ...C.refs };
+}
+
+/* ───────── shell ───────── */
+function renderNav() {
+  $('nav').innerHTML = NAV.filter(n => n[3] !== 'super' || me.role === 'super_admin').map(([k, label, icon]) => `<button type="button" data-tab="${k}" ${k === tab ? 'aria-current="page"' : ''}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${icon}</svg>${label}</button>`).join('');
+}
+$('nav').addEventListener('click', e => { const b = e.target.closest('[data-tab]'); if (b) { tab = b.dataset.tab; location.hash = tab; show(); $('main').focus({ preventScroll: true }); scrollTo(0, 0) } });
+addEventListener('hashchange', () => { const t = location.hash.slice(1); if (t && t !== tab && me) { tab = t; show() } });
+function head(title, sub, actions) { return `<div class="head"><div><h1>${title}</h1>${sub ? `<p>${sub}</p>` : ''}</div><div class="row">${actions || ''}</div></div>` }
+async function show() {
+  if (!NAV.some(n => n[0] === tab) || (tab === 'admins' && me.role !== 'super_admin')) tab = 'overview';
+  renderNav();
+  const m = $('main'); m.innerHTML = '<p class="loading">Loading…</p>';
+  try { await VIEWS[tab](m) } catch (err) { console.error(err); m.innerHTML = head('Something went wrong') + `<div class="card"><p>${esc(err.message || err)}</p><button class="btn" onclick="location.reload()">Reload</button></div>` }
+}
+function refCards(withGenerator) {
+  return `<div class="refs">${Object.entries(refs).map(([code, r]) => { const url = link(code); return `<div class="refcard"><header><h3>${esc(r.label || code)}</h3><span class="pill ${esc(r.side)}">?ref=${esc(code)}</span><span class="num">Replies go to +${esc(digits(r.whatsapp))}</span></header>
+    <div class="copybox"><code>${esc(url)}</code><button class="btn sec small" data-copy="${esc(url)}">${I.copy}Copy</button></div>
+    <div class="row"><a class="btn wa small" target="_blank" rel="noopener" href="${esc(waShare(inviteText(url)))}">${I.wa}Share on WhatsApp</a><a class="btn sec small" target="_blank" rel="noopener" href="${esc(url)}">${I.open}Open</a></div></div>` }).join('')}</div>
+  ${withGenerator ? `<div class="card" style="margin-top:1rem"><h2>Personal link for one guest</h2><p class="sub">The invitation greets them by name. For tracked invites with a code, add them under Guests & invites.</p>
+    <div class="form-grid"><label class="f">Guest name<input id="pl-name" placeholder="e.g. Ramesh Kaka" maxlength="60"></label><label class="f">Side<select id="pl-ref">${Object.entries(refs).map(([k, r]) => `<option value="${esc(k)}">${esc(r.label || k)}</option>`).join('')}</select></label><label class="f">Language<select id="pl-lang"><option value="">Guest chooses (Gujarati first)</option><option value="gu">Gujarati</option><option value="hi">Hindi</option><option value="mr">Marathi</option><option value="en">English</option></select></label></div>
+    <div class="copybox" style="margin-top:.8rem"><code id="pl-out"></code><button class="btn sec small" id="pl-copy">${I.copy}Copy</button></div>
+    <div class="row" style="margin-top:.6rem"><a class="btn wa small" id="pl-wa" target="_blank" rel="noopener">${I.wa}Share on WhatsApp</a></div></div>` : ''}`;
+}
+function wireRefCards(m) {
+  m.querySelectorAll('[data-copy]').forEach(b => b.onclick = () => copy(b.dataset.copy));
+  const n = m.querySelector('#pl-name'); if (!n) return;
+  const upd = () => { const url = link($('pl-ref').value, { to: n.value.trim(), lang: $('pl-lang').value }); $('pl-out').textContent = url; $('pl-wa').href = waShare(inviteText(url, n.value.trim())) };
+  [n, $('pl-ref'), $('pl-lang')].forEach(e => e.oninput = upd); $('pl-copy').onclick = () => copy($('pl-out').textContent); upd();
+}
+
+/* ───────── generic CRUD (events) ───────── */
+const SPEC = {
+  events: { o: 'sort_order', label: r => (r.title && (r.title.en || r.title.gu)) || r.slug, f: [['title', 'Title', 'i18n'], ['slug', 'Slug (unique, e.g. haldi)'], ['event_type', 'Type', 'sel', ['wedding', 'reception', 'other']], ['event_date', 'Date', 'date'], ['starts_at', 'Starts (IST)', 'dt'], ['ends_at', 'Ends (IST)', 'dt'], ['venue_name', 'Venue name'], ['venue_address', 'Venue address'], ['maps_url', 'Google Maps link'], ['description', 'Description', 'i18n'], ['sort_order', 'Order', 'num'], ['is_published', 'Show on invitation', 'bool']] }
+};
+const toLocal = v => v ? new Date(new Date(v).getTime() + 330 * 6e4).toISOString().slice(0, 16) : '';
+const fromLocal = v => v ? new Date(v + ':00+05:30').toISOString() : null;
+function field([k, lb, t, o], v) {
+  const a = `data-k="${k}" data-t="${t || 'text'}"`;
+  if (t === 'i18n') return `<fieldset class="i18n" style="grid-column:1/-1"><legend>${lb}</legend>${LG.map(l => `<label class="f">${{ en: 'English', gu: 'Gujarati', hi: 'Hindi', mr: 'Marathi' }[l]}<input ${a} data-l="${l}" value="${esc((v || {})[l])}"></label>`).join('')}</fieldset>`;
+  if (t === 'bool') return `<label class="check"><input type="checkbox" ${a} ${v ? 'checked' : ''}>${lb}</label>`;
+  if (t === 'sel') return `<label class="f">${lb}<select ${a}>${o.map(x => `<option ${x === v ? 'selected' : ''}>${x}</option>`).join('')}</select></label>`;
+  if (t === 'dt') return `<label class="f">${lb}<input type="datetime-local" ${a} value="${toLocal(v)}"></label>`;
+  return `<label class="f">${lb}<input type="${t === 'date' ? 'date' : t === 'num' ? 'number' : 'text'}" ${a} value="${esc(v)}"></label>`;
+}
+function collect(box, spec) {
+  const o = {};
+  for (const [k, , t] of spec.f) {
+    const els = [...box.querySelectorAll(`[data-k="${k}"]`)];
+    if (t === 'i18n') { o[k] = {}; els.forEach(e => { if (e.value.trim()) o[k][e.dataset.l] = e.value.trim() }) }
+    else if (t === 'bool') o[k] = els[0].checked;
+    else if (t === 'num') o[k] = Number(els[0].value) || 0;
+    else if (t === 'dt') o[k] = fromLocal(els[0].value);
+    else o[k] = els[0].value.trim() || null;
+  }
+  return o;
+}
+async function crud(m, table, title, sub) {
+  const sp = SPEC[table];
+  const { data, error } = await S.from(table).select('*').order(sp.o);
+  if (error) throw error;
+  const row = (r, isNew) => `<details class="item" ${isNew ? '' : ''} data-id="${r?.id || ''}"><summary>${isNew ? '＋ Add new' : esc(sp.label(r))}${!isNew && 'is_published' in r ? `<span class="pill ${r.is_published ? 'attending' : ''}">${r.is_published ? 'Visible' : 'Hidden'}</span>` : ''}</summary>
+    <div class="form-grid" style="margin-top:.6rem">${sp.f.map(f => field(f, r?.[f[0]])).join('')}</div>
+    <div class="row" style="margin-top:.8rem"><button class="btn" data-save type="button">${isNew ? 'Add' : 'Save changes'}</button>${isNew ? '' : '<button class="btn danger" data-rm type="button">Delete</button>'}</div></details>`;
+  m.innerHTML = head(title, sub) + `<div class="list">${row(null, true)}${data.map(r => row(r)).join('')}</div>`;
+  m.querySelectorAll('details').forEach(d => {
+    d.querySelector('[data-save]').onclick = async e => {
+      const o = collect(d, sp), id = d.dataset.id; e.target.disabled = true;
+      const { error } = id ? await S.from(table).update(o).eq('id', id) : await S.from(table).insert(o);
+      e.target.disabled = false; if (error) return toast(error.message, 1);
+      await audit(id ? 'update' : 'create', table, id || o.slug); toast(id ? 'Saved' : 'Added'); show();
+    };
+    const rm = d.querySelector('[data-rm]');
+    if (rm) rm.onclick = async () => { if (!confirm('Delete this permanently?')) return; const { error } = await S.from(table).delete().eq('id', d.dataset.id); if (error) return toast(error.message, 1); await audit('delete', table, d.dataset.id); toast('Deleted'); show() };
+  });
+}
+
+/* ───────── views ───────── */
+const VIEWS = {
+  async overview(m) {
+    const { data: r, error } = await S.from('rsvps').select('attendance,party_size,ref_code,created_at,guest_name');
+    if (error) throw error;
+    const yes = r.filter(x => x.attendance === 'attending'), heads = yes.reduce((a, x) => a + x.party_size, 0);
+    const bySide = Object.keys(refs).map(k => { const s = yes.filter(x => (x.ref_code || C.defaultRef) === k); return `<div class="stat"><b>${s.reduce((a, x) => a + x.party_size, 0)}</b><span>Coming via ${esc(refLabel(k))} (${s.length} replies)</span></div>` }).join('');
+    const recent = r.slice().sort((a, b) => b.created_at.localeCompare(a.created_at)).slice(0, 5);
+    m.innerHTML = head('Overview', 'How the invitations are doing.') +
+      `<div class="stats"><div class="stat accent"><b>${heads}</b><span>Guests attending</span></div><div class="stat"><b>${r.length}</b><span>Replies received</span></div><div class="stat"><b>${r.filter(x => x.attendance === 'maybe').length}</b><span>Not sure yet</span></div><div class="stat"><b>${r.filter(x => x.attendance === 'not_attending').length}</b><span>Can't attend</span></div>${bySide}</div>
+      <div class="card"><h2>Share the invitation</h2><p class="sub">Each link sends RSVP replies to that side's WhatsApp number.</p>${refCards(false)}</div>
+      <div class="card"><div class="row"><h2>Latest replies</h2><span class="spacer"></span><button class="btn sec small" data-go="rsvps">See all RSVPs</button></div>
+      ${recent.length ? `<div class="list" style="margin-top:.8rem">${recent.map(x => `<div class="item"><div class="top"><h3>${esc(x.guest_name)}</h3><span class="pill ${x.attendance}">${x.attendance.replace('_', ' ')}</span><span class="pill ${refSide(x.ref_code)}">${esc(refLabel(x.ref_code || C.defaultRef))}</span></div><div class="meta">${fmtDate(x.created_at)}</div></div>`).join('')}</div>` : '<p class="empty">No replies yet. Share a link above to get started.</p>'}</div>`;
+    wireRefCards(m); m.querySelectorAll('[data-go]').forEach(b => b.onclick = () => { tab = b.dataset.go; location.hash = tab; show() });
+  },
+
+  async rsvps(m) {
+    const [{ data, error }, ev] = await Promise.all([S.from('rsvps').select('*').order('created_at', { ascending: false }), S.from('events').select('id,title,slug')]);
+    if (error) throw error;
+    const evName = id => { const e = (ev.data || []).find(x => x.id === id); return e ? (e.title?.en || e.slug) : '' };
+    m.innerHTML = head('RSVPs', `${data.length} replies`, `<button class="btn sec" id="csv">${I.dl}Download CSV</button>`) +
+      `<div class="toolbar"><input type="search" id="q" placeholder="Search name, phone, message"><select id="fs"><option value="">All sides</option>${Object.keys(refs).map(k => `<option value="${esc(k)}">${esc(refLabel(k))}</option>`).join('')}</select><select id="fa"><option value="">Any answer</option><option value="attending">Attending</option><option value="maybe">Not sure</option><option value="not_attending">Can't attend</option></select></div><p class="sub" id="sum"></p><div class="list" id="rl"></div>`;
+    const draw = () => {
+      const q = $('q').value.trim().toLowerCase(), fs = $('fs').value, fa = $('fa').value;
+      const rows = data.filter(r => (!fs || (r.ref_code || C.defaultRef) === fs) && (!fa || r.attendance === fa) && (!q || [r.guest_name, r.phone, r.email, r.message].join(' ').toLowerCase().includes(q)));
+      $('sum').textContent = `${rows.length} shown · ${rows.filter(r => r.attendance === 'attending').reduce((a, r) => a + r.party_size, 0)} guests attending`;
+      $('rl').innerHTML = rows.length ? rows.map(r => `<div class="item"><div class="top"><h3>${esc(r.guest_name)}</h3><span class="pill ${r.attendance}">${r.attendance.replace('_', ' ')}</span><span class="pill">${r.party_size} guest${r.party_size > 1 ? 's' : ''}</span><span class="pill ${refSide(r.ref_code)}">${esc(refLabel(r.ref_code || C.defaultRef))}</span></div>
+        <div class="meta">${r.phone ? `<span>📞 ${esc(r.phone)}</span>` : ''}${r.email ? `<span>✉️ ${esc(r.email)}</span>` : ''}<span>${fmtDate(r.created_at)}</span><span>${esc(r.preferred_language)}</span>${(r.event_ids || []).length ? `<span>${esc(r.event_ids.map(evName).filter(Boolean).join(', '))}</span>` : ''}${r.dietary_notes ? `<span>🍽 ${esc(r.dietary_notes)}</span>` : ''}</div>
+        ${r.message ? `<div class="msg">${esc(r.message)}</div>` : ''}
+        <div class="row">${r.phone ? `<a class="btn wa small" target="_blank" rel="noopener" href="${esc(waTo(r.phone, `Namaste ${r.guest_name}! Thank you for your RSVP for Sagar & Dhrupti's wedding 🙏`))}">${I.wa}Reply on WhatsApp</a>` : ''}<span class="spacer"></span><button class="btn danger small" data-del="${r.id}">Delete</button></div></div>`).join('') : '<p class="empty">No replies match these filters.</p>';
+      $('rl').querySelectorAll('[data-del]').forEach(b => b.onclick = async () => { if (!confirm('Delete this RSVP?')) return; const { error } = await S.from('rsvps').delete().eq('id', b.dataset.del); if (error) return toast(error.message, 1); await audit('delete', 'rsvps', b.dataset.del); toast('Deleted'); show() });
+    };
+    ['q', 'fs', 'fa'].forEach(id => $(id).oninput = draw); draw();
+    $('csv').onclick = () => {
+      const h = ['guest_name', 'phone', 'email', 'attendance', 'party_size', 'ref_code', 'events', 'preferred_language', 'dietary_notes', 'message', 'whatsapp_consent', 'created_at'];
+      const q = v => '"' + String(v ?? '').replace(/"/g, '""') + '"';
+      const csv = '﻿' + [h.join(',')].concat(data.map(r => h.map(k => q(k === 'events' ? (r.event_ids || []).map(evName).join('; ') : k === 'ref_code' ? (r.ref_code || C.defaultRef) : r[k])).join(','))).join('\n');
+      const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob([csv], { type: 'text/csv' })), download: `rsvps-${new Date().toISOString().slice(0, 10)}.csv` }); a.click();
+    };
+  },
+
+  async guests(m) {
+    const { data, error } = await S.from('guests').select('*').order('created_at', { ascending: false });
+    if (error) throw error;
+    const sideSel = v => `<select data-k="ref_code">${Object.entries(refs).map(([k, r]) => `<option value="${esc(k)}" ${k === (v || C.defaultRef) ? 'selected' : ''}>${esc(r.label || k)}</option>`).join('')}</select>`;
+    const form = g => `<div class="form-grid" style="margin-top:.6rem"><label class="f">Full name<input data-k="full_name" value="${esc(g?.full_name)}" required></label><label class="f">WhatsApp / phone<input data-k="phone" inputmode="tel" value="${esc(g?.phone)}" placeholder="98xxxxxxxx"></label><label class="f">Family / group<input data-k="household_label" value="${esc(g?.household_label)}"></label><label class="f">Side${sideSel(g?.ref_code)}</label><label class="f">Email<input data-k="email" type="email" value="${esc(g?.email)}"></label><label class="f">Invite code<input data-k="invite_code" value="${esc(g?.invite_code)}" placeholder="Created automatically"></label><label class="f" style="grid-column:1/-1">Notes<input data-k="notes" value="${esc(g?.notes)}"></label></div>`;
+    const gl = g => link(g.ref_code || C.defaultRef, { c: g.invite_code });
+    m.innerHTML = head('Guests & invites', `${data.length} guests · each gets a personal link with their name`) +
+      `<div class="toolbar"><input type="search" id="q" placeholder="Search guests"><select id="fs"><option value="">All sides</option>${Object.keys(refs).map(k => `<option value="${esc(k)}">${esc(refLabel(k))}</option>`).join('')}</select></div>
+      <div class="list"><details class="item" data-id="" open><summary>＋ Add guest</summary>${form(null)}<div class="row" style="margin-top:.8rem"><button class="btn" data-save type="button">Add guest</button></div></details><div class="list" id="gl"></div></div>`;
+    const draw = () => {
+      const q = $('q').value.trim().toLowerCase(), fs = $('fs').value;
+      const rows = data.filter(g => (!fs || (g.ref_code || C.defaultRef) === fs) && (!q || [g.full_name, g.phone, g.household_label].join(' ').toLowerCase().includes(q)));
+      $('gl').innerHTML = rows.length ? rows.map(g => `<details class="item" data-id="${g.id}"><summary>${esc(g.full_name)} ${g.household_label ? `<span class="pill">${esc(g.household_label)}</span>` : ''}<span class="pill ${refSide(g.ref_code)}">${esc(refLabel(g.ref_code || C.defaultRef))}</span></summary>
+        <div class="copybox"><code>${esc(gl(g))}</code><button class="btn sec small" type="button" data-copy="${esc(gl(g))}">${I.copy}Copy</button></div>
+        <div class="row">${g.phone ? `<a class="btn wa small" target="_blank" rel="noopener" href="${esc(waTo(g.phone, inviteText(gl(g), g.full_name)))}">${I.wa}Send invite on WhatsApp</a>` : `<a class="btn wa small" target="_blank" rel="noopener" href="${esc(waShare(inviteText(gl(g), g.full_name)))}">${I.wa}Share on WhatsApp</a>`}</div>
+        ${form(g)}<div class="row" style="margin-top:.8rem"><button class="btn" data-save type="button">Save changes</button><button class="btn danger" data-rm type="button">Delete</button></div></details>`).join('') : '<p class="empty">No guests yet. Add one above to create a personal invite link.</p>';
+      wire();
+    };
+    const wire = () => m.querySelectorAll('details.item').forEach(d => {
+      d.querySelectorAll('[data-copy]').forEach(b => b.onclick = () => copy(b.dataset.copy));
+      d.querySelector('[data-save]').onclick = async e => {
+        const o = {}; d.querySelectorAll('[data-k]').forEach(i => o[i.dataset.k] = i.value.trim() || null);
+        if (!o.full_name) return toast('Add the guest’s name first', 1);
+        o.invite_code = (o.invite_code || Math.random().toString(36).slice(2, 8)).toUpperCase(); o.ref_code = o.ref_code || C.defaultRef;
+        const id = d.dataset.id; e.target.disabled = true;
+        const { error } = id ? await S.from('guests').update(o).eq('id', id) : await S.from('guests').insert(o);
+        e.target.disabled = false; if (error) return toast(error.message.includes('ref_code') ? 'Run the latest Supabase migration to enable guest sides.' : error.message, 1);
+        await audit(id ? 'update' : 'create', 'guests', id || o.invite_code); toast(id ? 'Saved' : 'Guest added'); show();
+      };
+      const rm = d.querySelector('[data-rm]'); if (rm) rm.onclick = async () => { if (!confirm('Delete this guest?')) return; const { error } = await S.from('guests').delete().eq('id', d.dataset.id); if (error) return toast(error.message, 1); await audit('delete', 'guests', d.dataset.id); toast('Deleted'); show() };
+    });
+    ['q', 'fs'].forEach(id => $(id).oninput = draw); draw();
+  },
+
+  async links(m) { m.innerHTML = head('Share links', 'Send the invitation from either side. Replies reach that side on WhatsApp.') + refCards(true) + `<p class="sub" style="margin-top:1rem">To change a WhatsApp number or add another side, go to Settings.</p>`; wireRefCards(m) },
+
+  events: m => crud(m, 'events', 'Events', 'Shown on the invitation timeline in this order.'),
+
+  async gallery(m) {
+    const { data, error } = await S.from('gallery_items').select('*').order('sort_order');
+    if (error) throw error;
+    m.innerHTML = head('Gallery', 'Photos appear on the invitation when marked visible.') +
+      `<label class="drop" id="drop"><input type="file" id="file" accept="image/jpeg,image/png,image/webp" multiple hidden><b>Upload photos</b><br><span class="sub">Tap to choose or drop JPG, PNG or WebP files (max 10 MB each)</span></label>
+      <div class="gal" style="margin-top:1rem">${data.map(g => `<div class="item" data-id="${g.id}"><img src="${esc(g.storage_path)}" alt="${esc(g.alt_text?.en || '')}" loading="lazy"><label class="f">Caption<input data-k="alt" value="${esc(g.alt_text?.en || '')}"></label><div class="row"><label class="check"><input type="checkbox" data-k="pub" ${g.is_published ? 'checked' : ''}>Visible</label><input data-k="ord" type="number" value="${g.sort_order}" style="width:70px;min-height:34px" aria-label="Order"></div><div class="row"><button class="btn small" data-save>Save</button><button class="btn danger small" data-rm>Delete</button></div></div>`).join('')}</div>${data.length ? '' : '<p class="empty" style="margin-top:1rem">No photos yet.</p>'}`;
+    const up = async files => {
+      let n = 0;
+      for (const f of files) {
+        if (f.size > 10485760) { toast(f.name + ' is larger than 10 MB', 1); continue }
+        const path = `${Date.now()}-${Math.random().toString(36).slice(2, 7)}.${(f.name.split('.').pop() || 'jpg').toLowerCase()}`;
+        toast(`Uploading ${f.name}…`);
+        const { error } = await S.storage.from('wedding-gallery').upload(path, f, { contentType: f.type, upsert: false });
+        if (error) { toast(error.message, 1); continue }
+        const url = S.storage.from('wedding-gallery').getPublicUrl(path).data.publicUrl;
+        const { error: e2 } = await S.from('gallery_items').insert({ storage_path: url, sort_order: data.length + n, is_published: true, alt_text: { en: '' }, title: {} });
+        if (e2) { toast(e2.message, 1); continue } n++;
+      }
+      if (n) { await audit('upload', 'gallery_items', null, { count: n }); toast(`${n} photo${n > 1 ? 's' : ''} added`); show() }
+    };
+    $('file').onchange = e => up([...e.target.files]);
+    const drop = $('drop'); drop.ondragover = e => { e.preventDefault(); drop.classList.add('over') }; drop.ondragleave = () => drop.classList.remove('over'); drop.ondrop = e => { e.preventDefault(); drop.classList.remove('over'); up([...e.dataTransfer.files]) };
+    m.querySelectorAll('.gal .item').forEach(d => {
+      const k = s => d.querySelector(`[data-k="${s}"]`);
+      d.querySelector('[data-save]').onclick = async () => { const { error } = await S.from('gallery_items').update({ alt_text: { en: k('alt').value.trim() }, is_published: k('pub').checked, sort_order: Number(k('ord').value) || 0 }).eq('id', d.dataset.id); if (error) return toast(error.message, 1); await audit('update', 'gallery_items', d.dataset.id); toast('Saved') };
+      d.querySelector('[data-rm]').onclick = async () => {
+        if (!confirm('Delete this photo?')) return;
+        const g = data.find(x => x.id === d.dataset.id), marker = '/wedding-gallery/', i = g.storage_path.indexOf(marker);
+        if (i > -1) await S.storage.from('wedding-gallery').remove([decodeURIComponent(g.storage_path.slice(i + marker.length))]);
+        const { error } = await S.from('gallery_items').delete().eq('id', d.dataset.id); if (error) return toast(error.message, 1); await audit('delete', 'gallery_items', d.dataset.id); toast('Deleted'); show();
+      };
+    });
+  },
+
+  async settings(m) {
+    await loadSettings();
+    const c = { ...C.couple, ...(settingsCache.couple || {}) }, v = { ...C.venue, ...(settingsCache.venue || {}) };
+    const refRow = (code, r) => `<div class="refcard" data-ref><div class="form-grid"><label class="f">Ref code (in the link)<input data-r="code" value="${esc(code)}" pattern="[a-z0-9_-]+" placeholder="e.g. sags"></label><label class="f">Name shown in admin<input data-r="label" value="${esc(r.label)}"></label><label class="f">Family side<select data-r="side"><option value="groom" ${r.side === 'groom' ? 'selected' : ''}>Groom's side</option><option value="bride" ${r.side === 'bride' ? 'selected' : ''}>Bride's side</option></select></label><label class="f">WhatsApp number (with country code)<input data-r="whatsapp" inputmode="tel" value="${esc(r.whatsapp)}" placeholder="917387322548"></label></div><div class="row"><span class="spacer"></span><button class="btn danger small" type="button" data-rm-ref>Remove</button></div></div>`;
+    m.innerHTML = head('Settings', 'Changes appear on the invitation right away.') +
+      `<div class="card"><h2>Share links & WhatsApp numbers</h2><p class="sub">A guest opening <code>?ref=CODE</code> sends their RSVP to that number. Links without a ref use <b>${esc(C.defaultRef)}</b>.</p><div class="grid" id="refs">${Object.entries(refs).map(([k, r]) => refRow(k, r)).join('')}</div><div class="row" style="margin-top:.8rem"><button class="btn sec" id="add-ref" type="button">＋ Add another link</button><span class="spacer"></span><button class="btn" id="save-refs" type="button">Save links</button></div></div>
+      <div class="card"><h2>Couple</h2><p class="sub">Names in English. Other languages use the built-in Gujarati, Hindi and Marathi spellings.</p><div class="form-grid"><label class="f">Groom<input id="c-groom" value="${esc(c.groom)}"></label><label class="f">Bride<input id="c-bride" value="${esc(c.bride)}"></label><label class="f">Wedding date<input id="c-date" type="date" value="${esc(c.wedding_date)}"></label><label class="f">Groom photo URL (optional)<input id="c-gp" value="${esc(c.groom_photo)}"></label><label class="f">Bride photo URL (optional)<input id="c-bp" value="${esc(c.bride_photo)}"></label></div><div class="row" style="margin-top:.8rem"><span class="spacer"></span><button class="btn" id="save-couple" type="button">Save couple</button></div></div>
+      <div class="card"><h2>Venue</h2><div class="form-grid"><label class="f">Venue name<input id="v-name" value="${esc(v.name)}"></label><label class="f">Google Maps link<input id="v-map" value="${esc(v.maps_url)}"></label><label class="f" style="grid-column:1/-1">Address<textarea id="v-addr" style="min-height:70px">${esc(v.address)}</textarea></label></div><div class="row" style="margin-top:.8rem"><span class="spacer"></span><button class="btn" id="save-venue" type="button">Save venue</button></div></div>`;
+    const wireRm = () => m.querySelectorAll('[data-rm-ref]').forEach(b => b.onclick = () => b.closest('[data-ref]').remove());
+    wireRm();
+    $('add-ref').onclick = () => { $('refs').insertAdjacentHTML('beforeend', refRow('', { side: 'groom' })); wireRm() };
+    const saveSetting = async (key, value, btn) => {
+      btn.disabled = true;
+      const { error } = await S.from('site_settings').upsert({ setting_key: key, value, is_public: true, updated_by: me.id, updated_at: new Date().toISOString() }, { onConflict: 'setting_key' });
+      btn.disabled = false; if (error) return toast(error.message, 1);
+      await audit('update', 'site_settings', key); toast('Saved'); await loadSettings();
+    };
+    $('save-refs').onclick = e => {
+      const out = {};
+      for (const box of m.querySelectorAll('[data-ref]')) {
+        const g = k => box.querySelector(`[data-r="${k}"]`).value.trim();
+        const code = g('code').toLowerCase(), wa = digits(g('whatsapp'));
+        if (!/^[a-z0-9_-]{1,24}$/.test(code)) return toast('Ref codes can use only small letters, numbers, - and _', 1);
+        if (wa.length < 11) return toast(`Add the country code to the WhatsApp number for “${code}” (e.g. 91…)`, 1);
+        out[code] = { label: g('label') || code, side: g('side'), whatsapp: wa };
+      }
+      if (!out[C.defaultRef]) return toast(`Keep the “${C.defaultRef}” link: it is the default for links without a ref.`, 1);
+      saveSetting('refs', out, e.target);
+    };
+    $('save-couple').onclick = e => saveSetting('couple', { ...(settingsCache.couple || {}), groom: $('c-groom').value.trim(), bride: $('c-bride').value.trim(), wedding_date: $('c-date').value, groom_photo: $('c-gp').value.trim() || undefined, bride_photo: $('c-bp').value.trim() || undefined }, e.target);
+    $('save-venue').onclick = e => saveSetting('venue', { ...(settingsCache.venue || {}), name: $('v-name').value.trim(), address: $('v-addr').value.trim(), maps_url: $('v-map').value.trim() }, e.target);
+  },
+
+  async admins(m) {
+    const { data, error } = await S.from('admin_allowlist').select('*').order('created_at');
+    if (error) { m.innerHTML = head('Admins') + `<div class="card"><h2>Run the latest migration first</h2><p class="sub">Google sign-in admins need <code>supabase/migrations/20261112000000_refs_and_google_admins.sql</code>. Run it once in the Supabase SQL editor, then reload.</p><p class="sub">${esc(error.message)}</p></div>`; return }
+    m.innerHTML = head('Admins', 'People who can sign in with Google. They get access the first time they sign in.') +
+      `<div class="card"><h2>Add someone</h2><div class="form-grid"><label class="f">Google email<input id="a-email" type="email" placeholder="name@gmail.com"></label><label class="f">Name<input id="a-name"></label><label class="f">Role<select id="a-role"><option value="admin">Admin: manage guests, RSVPs and content</option><option value="super_admin">Super admin: also manage admins</option></select></label></div><div class="row" style="margin-top:.8rem"><span class="spacer"></span><button class="btn" id="a-add" type="button">Give access</button></div></div>
+      <div class="list" style="margin-top:1rem">${data.map(a => `<div class="item"><div class="top"><h3>${esc(a.display_name || a.email)}</h3><span class="pill ${a.role === 'super_admin' ? 'bride' : ''}">${a.role === 'super_admin' ? 'Super admin' : 'Admin'}</span></div><div class="meta"><span>${esc(a.email)}</span><span>Added ${fmtDate(a.created_at)}</span></div><div class="row"><span class="spacer"></span>${a.email === (user.email || '').toLowerCase() ? '<span class="sub">This is you</span>' : `<button class="btn danger small" data-rm="${esc(a.email)}">Remove access</button>`}</div></div>`).join('')}</div>`;
+    $('a-add').onclick = async e => {
+      const email = $('a-email').value.trim().toLowerCase();
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return toast('Enter a valid email address', 1);
+      e.target.disabled = true;
+      const { error } = await S.from('admin_allowlist').upsert({ email, role: $('a-role').value, display_name: $('a-name').value.trim() || null, added_by: me.id });
+      e.target.disabled = false; if (error) return toast(error.message, 1);
+      await audit('grant', 'admin_allowlist', email); toast('Access given. They can sign in with Google now.'); show();
+    };
+    m.querySelectorAll('[data-rm]').forEach(b => b.onclick = async () => { if (!confirm(`Remove admin access for ${b.dataset.rm}?`)) return; const { error } = await S.from('admin_allowlist').delete().eq('email', b.dataset.rm); if (error) return toast(error.message, 1); await audit('revoke', 'admin_allowlist', b.dataset.rm); toast('Access removed'); show() });
+  }
+};
+})();
+</script>
+</body>
+</html>
