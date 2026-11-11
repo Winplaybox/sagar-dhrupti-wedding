@@ -88,7 +88,16 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--sindoor)
 .check input{width:18px;height:18px;accent-color:var(--sindoor)}
 .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.8rem}
 .i18n{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:.6rem;border:1px dashed var(--line);border-radius:12px;padding:.7rem;margin:0}
-.i18n legend{font-size:.85rem;font-weight:700;padding:0 .3rem}
+.i18n legend{font-size:.85rem;font-weight:700;padding:0 .3rem;display:flex;align-items:center}
+.swatches{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:.7rem}
+.swatch{border:2px solid var(--line);border-radius:14px;padding:.6rem;background:#fff;cursor:pointer;text-align:left;display:grid;gap:.45rem}
+.swatch[aria-pressed=true]{border-color:var(--sindoor);box-shadow:0 0 0 3px #b3122e22}
+.swatch .bar{display:flex;height:34px;border-radius:9px;overflow:hidden}
+.swatch .bar span{flex:1}
+.swatch b{font-size:.95rem}.swatch small{color:var(--muted);font-size:.78rem;line-height:1.3}
+.colors{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:.6rem;margin-top:.8rem}
+.colors label{display:flex;align-items:center;gap:.5rem;font-size:.85rem;font-weight:600}
+.colors input[type=color]{width:44px;height:36px;border:1px solid var(--line);border-radius:8px;padding:2px;background:#fff}
 .pill{display:inline-flex;align-items:center;gap:.3rem;padding:.12rem .55rem;border-radius:999px;font-size:.78rem;font-weight:600;background:#f3e7e4;color:#5a2330;white-space:nowrap}
 .pill.attending{background:#dff3e7;color:#11603a}
 .pill.not_attending{background:#fbe0e3;color:#8f0f26}
@@ -226,12 +235,52 @@ const NAV = [
   ['guests', 'Guests', '<circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0M17 11h6M20 8v6"/>', 'all'],
   ['events', 'Events', '<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4m8-4v4"/>', 'admin'],
   ['sections', 'Sections & text', '<path d="M4 5h16M4 12h16M4 19h10"/>', 'admin'],
+  ['design', 'Design & theme', '<circle cx="13.5" cy="6.5" r="1.5"/><circle cx="17.5" cy="10.5" r="1.5"/><circle cx="8.5" cy="7.5" r="1.5"/><circle cx="6.5" cy="12.5" r="1.5"/><path d="M12 2a10 10 0 0 0 0 20c1 0 1.7-.8 1.7-1.7 0-.4-.2-.8-.4-1.1-.3-.3-.4-.7-.4-1.1 0-.9.8-1.7 1.7-1.7H16a6 6 0 0 0 6-6c0-4.4-4.5-8.4-10-8.4z"/>', 'admin'],
   ['gallery', 'Gallery', '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/>', 'admin'],
   ['settings', 'Couple & venue', '<path d="M12 21s-7-4.4-9.3-9A5 5 0 0 1 12 6a5 5 0 0 1 9.3 6c-2.3 4.6-9.3 9-9.3 9z"/>', 'admin'],
   ['people', 'People & access', '<path d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5z"/>', 'admin'],
   ['profile', 'My profile', '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>', 'all']
 ];
 const allowed = k => { const n = NAV.find(x => x[0] === k); return n && (n[3] === 'all' || isAdmin()) };
+
+/* ───────── Auto-translate (Google Translate, MyMemory fallback) ───────── */
+async function translate(text, to, from) {
+  text = String(text || '').trim(); if (!text) return '';
+  const sl = from || 'auto';
+  try {
+    const r = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sl}&tl=${to}&dt=t&q=${encodeURIComponent(text)}`);
+    const j = await r.json(); const t = (j[0] || []).map(x => x[0]).join('');
+    if (t) return t;
+  } catch {}
+  try {
+    const r = await fetch(`https://api.mymemory.translated.net/get?langpair=${sl === 'auto' ? 'en' : sl}|${to}&q=${encodeURIComponent(text)}`);
+    const j = await r.json(); return j.responseData?.translatedText || '';
+  } catch { return '' }
+}
+/* Every 4-language group gets a "Translate" button; leaving the English box fills empty languages. */
+function wireTranslate(root) {
+  root.querySelectorAll('fieldset.i18n').forEach(fs => {
+    if (fs.dataset.tr) return; fs.dataset.tr = 1;
+    const box = l => fs.querySelector(`[data-l="${l}"]`);
+    if (!box('en')) return;
+    const run = async (overwrite, btn) => {
+      const src = ['en', 'gu', 'hi', 'mr'].find(l => box(l) && box(l).value.trim());
+      if (!src) return toast('Type the text in any one language first', 1);
+      const text = box(src).value;
+      if (btn) { btn.disabled = true; btn.textContent = 'Translating…' }
+      const targets = ['en', 'gu', 'hi', 'mr'].filter(l => l !== src && box(l) && (overwrite || !box(l).value.trim()));
+      const res = await Promise.all(targets.map(l => translate(text, l, src)));
+      let n = 0; targets.forEach((l, i) => { if (res[i]) { box(l).value = res[i]; box(l).dispatchEvent(new Event('input', { bubbles: true })); n++ } });
+      if (btn) { btn.disabled = false; btn.textContent = '✨ Translate' }
+      if (btn) toast(n ? `Translated into ${n} language${n > 1 ? 's' : ''}. Check names and edit if needed.` : 'Translation is not reachable right now. Type it manually.', !n);
+    };
+    const lg = fs.querySelector('legend');
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'btn sec small'; b.style.marginLeft = '.5rem'; b.textContent = '✨ Translate';
+    b.title = 'Fill the other languages from the first filled box';
+    b.onclick = () => run(true, b); lg.appendChild(b);
+    box('en').addEventListener('change', () => run(false));
+  });
+}
 
 /* ───────── auth ───────── */
 function showLogin(msg) { $('app').hidden = true; $('login').hidden = false; $('login-err').textContent = msg || ''; $('google').disabled = false; booted = false; me = null }
@@ -347,6 +396,7 @@ async function show() {
   try { await VIEWS[tab](m) } catch (err) { console.error(err); m.innerHTML = missing(err) ? migrationCard('Almost ready') : head('Something went wrong') + `<div class="card"><p>${esc(err.message || err)}</p><button class="btn" onclick="location.reload()">Reload</button></div>` }
   m.querySelectorAll('[data-copy]').forEach(b => b.onclick = () => copy(b.dataset.copy));
   m.querySelectorAll('[data-go]').forEach(b => b.onclick = () => go(b.dataset.go));
+  wireTranslate(m);
 }
 function shareBox(r, stats) {
   const url = link(r.code);
@@ -576,6 +626,39 @@ const VIEWS = {
     await crud(m, 'site_sections', 'Sections & text', 'Reorder, hide or add sections to the invitation. Changes go live immediately.', extra);
     $('save-lay').onclick = e => { const out = {}; BUILT.forEach(([k]) => out[k] = { order: Number(m.querySelector(`[data-lay="${k}"]`).value) || C.layout[k], hidden: !m.querySelector(`[data-vis="${k}"]`).checked }); saveSetting('layout', out, e.target) };
     $('save-copy').onclick = e => { const out = {}; m.querySelectorAll('[data-copy-k]').forEach(i => { if (i.value.trim()) { out[i.dataset.copyK] = out[i.dataset.copyK] || {}; out[i.dataset.copyK][i.dataset.l] = i.value.trim() } }); saveSetting('copy', out, e.target) };
+  },
+
+  async design(m) {
+    const th = JSON.parse(JSON.stringify(settingsCache.theme || C.defaultTheme));
+    const COLS = [['primary', 'Main colour (buttons, headings)'], ['accent', 'Highlight (names, gold)'], ['dark', 'Dark bands & frame'], ['paper', 'Page background'], ['hero', 'Hero glow'], ['ink', 'Text']];
+    const card = sd => {
+      const conf = th[sd] || { preset: 'kankotri' }, t = C.themes[conf.preset] || C.themes.kankotri, cols = { ...t.colors, ...(conf.colors || {}) };
+      return `<div class="card" data-side="${sd}"><div class="row"><h2>${SIDE[sd]}</h2><span class="spacer"></span><a class="btn sec small" target="_blank" rel="noopener" data-preview>${I.open}Preview</a>${sd === 'bride' ? '<button class="btn sec small" type="button" data-copyfrom>Same as groom</button>' : ''}</div>
+        <p class="sub">Guests who open a ${sd} link (e.g. <code>?ref=${sd}</code>) see this design.</p>
+        <div class="swatches">${Object.entries(C.themes).map(([k, v]) => `<button type="button" class="swatch" data-preset="${k}" aria-pressed="${k === conf.preset}"><div class="bar">${['dark', 'primary', 'accent', 'paper'].map(c => `<span style="background:${v.colors[c]}"></span>`).join('')}</div><b>${esc(v.name)}</b><small>${esc(v.note)}</small></button>`).join('')}</div>
+        <div class="form-grid" style="margin-top:.9rem"><label class="f">Heading font<select data-font>${opts(Object.entries(C.fonts).map(([k, f]) => [k, f.name]), conf.font || t.font)}</select></label></div>
+        <details style="margin-top:.8rem"><summary style="cursor:pointer;font-weight:600">Fine-tune colours</summary><div class="colors">${COLS.map(([k, l]) => `<label><input type="color" data-col="${k}" value="${cols[k]}">${l}</label>`).join('')}</div><button class="btn sec small" type="button" data-reset style="margin-top:.6rem">Reset to preset colours</button></details></div>`;
+    };
+    m.innerHTML = head('Design & theme', 'Choose the look of the invitation for each side. Changes go live when you save.', '<button class="btn" id="save-theme" type="button">Save design</button>') + card('groom') + card('bride');
+    const read = box => {
+      const preset = box.querySelector('.swatch[aria-pressed=true]').dataset.preset, base = C.themes[preset].colors, colors = {};
+      box.querySelectorAll('[data-col]').forEach(i => { if (i.value.toLowerCase() !== String(base[i.dataset.col]).toLowerCase()) colors[i.dataset.col] = i.value });
+      if (colors.primary && !colors.primaryDeep) colors.primaryDeep = colors.primary;
+      return { preset, font: box.querySelector('[data-font]').value, colors };
+    };
+    const refresh = box => { const conf = read(box); box.querySelector('[data-preview]').href = `${SITE}/?ref=${box.dataset.side}&skip&theme=${encodeURIComponent(JSON.stringify(conf))}` };
+    m.querySelectorAll('.card[data-side]').forEach(box => {
+      box.querySelectorAll('.swatch').forEach(b => b.onclick = () => {
+        box.querySelectorAll('.swatch').forEach(x => x.setAttribute('aria-pressed', x === b));
+        const t = C.themes[b.dataset.preset]; box.querySelectorAll('[data-col]').forEach(i => i.value = t.colors[i.dataset.col]); box.querySelector('[data-font]').value = t.font; refresh(box);
+      });
+      box.querySelector('[data-reset]').onclick = () => { const t = C.themes[read(box).preset]; box.querySelectorAll('[data-col]').forEach(i => i.value = t.colors[i.dataset.col]); refresh(box) };
+      box.querySelectorAll('[data-col],[data-font]').forEach(i => i.oninput = () => refresh(box));
+      const cf = box.querySelector('[data-copyfrom]');
+      if (cf) cf.onclick = () => { const g = read(m.querySelector('[data-side=groom]')); box.querySelectorAll('.swatch').forEach(x => x.setAttribute('aria-pressed', x.dataset.preset === g.preset)); const cols = { ...C.themes[g.preset].colors, ...g.colors }; box.querySelectorAll('[data-col]').forEach(i => i.value = cols[i.dataset.col]); box.querySelector('[data-font]').value = g.font; refresh(box) };
+      refresh(box);
+    });
+    $('save-theme').onclick = e => saveSetting('theme', { groom: read(m.querySelector('[data-side=groom]')), bride: read(m.querySelector('[data-side=bride]')) }, e.target);
   },
 
   async gallery(m) {

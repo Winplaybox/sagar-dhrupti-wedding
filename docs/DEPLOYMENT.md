@@ -57,6 +57,11 @@ Reuse the existing Google Cloud project (the one used for the YouTube automation
 - **Sections & text**: reorder or hide built-in sections (couple 10, countdown 20, events 30, venue 40, gallery 50, RSVP 60), add custom sections (text, photo, blessing, names list), override any heading in the four languages.
 - **Couple & venue**, **Gallery** (direct upload to the `wedding-gallery` bucket).
 
+## Design & translation
+
+- **Design & theme** (admins): pick a theme per side (Kankotri, Vanam, Gulab, Neelam), heading font and fine-tune colours. Stored in `site_settings.theme`; *Preview* opens the invitation with `&theme=…` before saving.
+- **Auto-translate**: every four-language field group has a ✨ Translate button; leaving the English box fills the empty languages. Runs in the admin's browser through Google Translate (MyMemory as fallback), the same service Python `googletrans` uses, so no server is needed. Always proof-read names.
+
 ## Security notes
 
 Never put the service-role or `sb_secret_` key in `site/`, Git or browser-exposed env vars. The build checker fails if one appears.
