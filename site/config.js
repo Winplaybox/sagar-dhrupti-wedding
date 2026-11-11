@@ -30,7 +30,7 @@ window.WEDDING = {
 
   /* Built-in sections and their default order. Admins can reorder or hide them and
    * add custom sections in between (public.site_sections, sort_order). */
-  layout: { couple: 10, countdown: 20, events: 30, venue: 40, gallery: 50, rsvp: 60 }
+  layout: { blessing: 5, couple: 10, countdown: 20, events: 30, venue: 40, gallery: 50, rsvp: 60 }
 };
 
 /* Normalise a ref code from a URL or record. Unknown codes fall back to the default. */
@@ -60,7 +60,17 @@ window.WEDDING.themes = {
   gulab: { name: 'Gulab', note: 'Blush, wine and rose', font: 'script',
     colors: { primary: '#9b1b4f', primaryDeep: '#6b0f36', accent: '#f3bfd0', dark: '#4a0f2e', paper: '#fbf1f5', paper2: '#f3e0ea', ink: '#3a0f24', muted: '#7a4a60', hero: '#c2416f', leaf: '#5f7a52' } },
   neelam: { name: 'Neelam', note: 'Royal blue and gold', font: 'rozha',
-    colors: { primary: '#22408f', primaryDeep: '#15295e', accent: '#e9b949', dark: '#0d1a40', paper: '#eef2fa', paper2: '#dde5f4', ink: '#0f1a36', muted: '#46557a', hero: '#3558b8', leaf: '#1f6b4f' } }
+    colors: { primary: '#22408f', primaryDeep: '#15295e', accent: '#e9b949', dark: '#0d1a40', paper: '#eef2fa', paper2: '#dde5f4', ink: '#0f1a36', muted: '#46557a', hero: '#3558b8', leaf: '#1f6b4f' } },
+  kesar: { name: 'Kesar', note: 'Saffron, marigold and maroon', font: 'rozha',
+    colors: { primary: '#c2410c', primaryDeep: '#8a2c06', accent: '#fbbf24', dark: '#4a1205', paper: '#fff4e6', paper2: '#fde3c3', ink: '#3b1204', muted: '#7a4a2a', hero: '#f97316', leaf: '#3f6212' } },
+  mor: { name: 'Mor', note: 'Peacock teal, blue and gold', font: 'cormorant',
+    colors: { primary: '#0f766e', primaryDeep: '#0b4f4a', accent: '#e0b84a', dark: '#082f35', paper: '#eef8f6', paper2: '#d5eeea', ink: '#0b2a2c', muted: '#3f6663', hero: '#1e9c8f', leaf: '#3546b8' } },
+  chandni: { name: 'Chandni', note: 'Moonlit night and silver', font: 'cormorant',
+    colors: { primary: '#3a4a7a', primaryDeep: '#232f55', accent: '#ece6d6', dark: '#0e1430', paper: '#f5f6fa', paper2: '#e6e9f2', ink: '#12162a', muted: '#4b5270', hero: '#5f6fa8', leaf: '#6b5d2f' } },
+  mehndi: { name: 'Mehndi', note: 'Henna green and turmeric', font: 'rozha',
+    colors: { primary: '#5b6b1e', primaryDeep: '#3d4812', accent: '#f59e0b', dark: '#2a3009', paper: '#f7f6e8', paper2: '#ebe9cc', ink: '#23280c', muted: '#5a6040', hero: '#7d8f2a', leaf: '#b45309' } },
+  rajwada: { name: 'Rajwada', note: 'Royal purple and gold', font: 'script',
+    colors: { primary: '#6b21a8', primaryDeep: '#4a1577', accent: '#f0c45c', dark: '#2a0b45', paper: '#f8f2fc', paper2: '#ecdff5', ink: '#250a3a', muted: '#5f4675', hero: '#8b3fd1', leaf: '#8a6d1f' } }
 };
 window.WEDDING.fonts = {
   rozha: { name: 'Rozha One (bold Indian)', family: "'Rozha One','Noto Serif Devanagari',serif", weight: 400, style: 'normal' },

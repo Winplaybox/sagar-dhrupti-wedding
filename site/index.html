@@ -71,7 +71,8 @@ button,input,select,textarea{font:inherit;color:inherit}
 .lang button[aria-pressed=true]{background:var(--haldi);color:var(--night);font-weight:600}
 
 /* ───────── Hero: looking through a jharokha ───────── */
-#hero{position:relative;height:100svh;min-height:560px;overflow:hidden;background:radial-gradient(120% 80% at 50% 38%,var(--hero) 0%,var(--sindoor) 38%,var(--sindoor-deep) 75%,var(--night) 100%);color:var(--on-dark)}
+#hero{position:relative;height:100svh;min-height:560px}
+#hero>.stage{position:relative;height:100svh;min-height:560px;overflow:hidden;background:radial-gradient(120% 80% at 50% 38%,var(--hero) 0%,var(--sindoor) 38%,var(--sindoor-deep) 75%,var(--night) 100%);color:var(--on-dark)}
 .layer{position:absolute;will-change:transform;pointer-events:none}
 .sun{left:50%;top:40%;width:min(70vw,460px);aspect-ratio:1;margin:calc(min(70vw,460px)/-2) 0 0 calc(min(70vw,460px)/-2);border-radius:50%;
   background:radial-gradient(circle,var(--haldi-soft) 0%,var(--haldi) 42%,transparent 70%);opacity:.55}
@@ -138,9 +139,57 @@ body[data-l=gu] h2{font-family:'Noto Serif Gujarati',serif;font-weight:800}
 .cd span{font-size:.85rem;color:var(--on-dark)}
 .cal{display:flex;justify-content:center;margin-top:2rem}
 
+/* ───────── Cinematic scroll scenes ─────────
+   A .scene is taller than the screen; its .stage sticks while the scroll position
+   plays the animation like a video. Without .cine (reduced motion) every scene
+   shows its final frame. Variables default to the finished state. */
+.scene>.stage{position:relative;height:100svh;min-height:560px;overflow:hidden}
+body.cine #hero{height:230svh}
+body.cine .scene{height:var(--len,240svh)}
+body.cine .scene>.stage,body.cine #hero>.stage{position:sticky;top:0}
+.veil{position:absolute;inset:0;z-index:9;pointer-events:none;opacity:var(--veil,0)}
+#hero .veil{background:var(--night)}
+#hero .sun{transform:scale(var(--sun,1))}
+#hero .mandala{transform:rotate(var(--rot,0deg)) scale(var(--msc,1))}
+#hero .toran{transform:translateY(var(--tor,0px))}
+#hero .arch{transform:scale(var(--arch,1));opacity:var(--archo,1)}
+#hero .hero-copy{opacity:var(--copyo,1);transform:translate(-50%,calc(-50% + var(--copyy,0px))) scale(var(--copys,1))}
+
+/* diya scene */
+.lamps>.stage{background:radial-gradient(ellipse 90% 70% at 50% 70%,color-mix(in srgb,var(--haldi) calc(var(--warm,1) * 26%),var(--night)) 0%,var(--night) 70%);color:var(--on-dark);display:grid;place-items:center;text-align:center}
+.lamps .dotsbg{position:absolute;inset:0;background:var(--dots) 0 0/22px 22px;opacity:.07}
+.lamps-copy{position:relative;z-index:3;width:min(90vw,620px);margin-top:-18svh}
+.lamps-copy .kicker{margin:0 0 .4rem;color:var(--haldi-soft);font-size:.95rem;opacity:var(--t1,1);transform:translateY(calc((1 - var(--t1,1)) * 20px))}
+.lamps-copy h2{color:var(--haldi);opacity:var(--t1,1);transform:translateY(calc((1 - var(--t1,1)) * 30px))}
+.lamps-copy p.sub{margin:.6rem auto 0;max-width:34ch;opacity:var(--t2,1);transform:translateY(calc((1 - var(--t2,1)) * 20px))}
+.diyas{position:absolute;z-index:3;left:50%;bottom:18svh;transform:translateX(-50%);display:flex;gap:clamp(.6rem,4vw,2.4rem);align-items:flex-end}
+.diya-l{position:relative;width:clamp(48px,13vw,90px)}
+.diya-l:nth-child(2),.diya-l:nth-child(4){margin-bottom:clamp(14px,4vw,30px)}
+.diya-l:nth-child(3){margin-bottom:clamp(26px,7vw,52px)}
+.diya-l svg{width:100%;overflow:visible}
+.diya-l .fl{transform-origin:50% 100%;transform-box:fill-box;transform:scale(var(--k,1));opacity:var(--k,1)}
+.diya-l .fl path{animation:flick 1.4s ease-in-out infinite alternate}
+.diya-l .halo{position:absolute;left:50%;top:-10%;width:260%;aspect-ratio:1;transform:translate(-50%,-40%);border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--haldi) 55%,transparent),transparent 65%);opacity:calc(var(--k,1) * .8);pointer-events:none}
+.rangoli{position:absolute;z-index:1;left:50%;bottom:-38svh;width:min(150vw,1100px);aspect-ratio:1;transform:translateX(-50%) rotate(var(--rr,0deg)) scale(var(--rs,1));color:var(--haldi);opacity:calc(var(--ro,1) * .35)}
+.lamps .veil{background:var(--gulabi)}
+
+/* couple scene */
+#couple>.stage{display:grid;align-content:center;padding:clamp(2rem,6vw,4rem) 1.25rem}
+#couple .person.l{transform:translateX(calc((1 - var(--ck,1)) * -60vw)) rotate(calc((1 - var(--ck,1)) * -14deg));opacity:calc(.2 + var(--ck,1) * .8)}
+#couple .person.r{transform:translateX(calc((1 - var(--ck,1)) * 60vw)) rotate(calc((1 - var(--ck,1)) * 14deg));opacity:calc(.2 + var(--ck,1) * .8)}
+#couple .knot{transform:scale(var(--kk,1)) rotate(calc((1 - var(--kk,1)) * 180deg));opacity:var(--kk,1)}
+#couple h2,#couple .motif{opacity:var(--ch,1);transform:translateY(calc((1 - var(--ch,1)) * 24px))}
+#couple .lede{opacity:var(--cl,1);transform:translateY(calc((1 - var(--cl,1)) * 16px))}
+.varmala{display:block;width:min(560px,90%);margin:-.4rem auto 0;color:var(--haldi);overflow:visible}
+.varmala path{stroke-dasharray:1;stroke-dashoffset:calc(1 - var(--vm,1))}
+.varmala circle{opacity:var(--vm,1)}
+
 /* events timeline */
 .timeline{position:relative;margin:0;padding:0;list-style:none}
-.timeline::before{content:"";position:absolute;left:22px;top:6px;bottom:6px;width:2px;background:linear-gradient(var(--haldi),var(--sindoor));transform-origin:top;transform:scaleY(var(--line,0));transition:transform 1.4s var(--ease)}
+.timeline::before{content:"";position:absolute;left:22px;top:6px;bottom:6px;width:2px;background:linear-gradient(var(--haldi),var(--sindoor));transform-origin:top;transform:scaleY(var(--line,1))}
+.traveler{position:absolute;left:23px;top:calc(6px + var(--line,1) * (100% - 12px));width:20px;height:20px;margin:-10px 0 0 -10px;border-radius:50%;background:radial-gradient(circle,#fff 0 18%,var(--haldi) 40%,transparent 72%);box-shadow:0 0 18px 6px color-mix(in srgb,var(--haldi) 60%,transparent);z-index:2;opacity:calc(1 - var(--line,1) * .3);pointer-events:none}
+body.cine .timeline li{opacity:.18;transform:translateY(24px);transition:opacity .7s var(--ease),transform .7s var(--ease)}
+body.cine .timeline li.on{opacity:1;transform:none}
 .timeline li{position:relative;padding:0 0 2.4rem 64px}
 .timeline li:last-child{padding-bottom:0}
 .timeline .dot{position:absolute;left:8px;top:4px;width:30px;height:30px;border-radius:50%;background:var(--haldi);box-shadow:0 0 0 4px var(--gulabi),0 0 0 6px var(--sindoor);display:grid;place-items:center;color:var(--sindoor-deep)}
@@ -249,6 +298,7 @@ footer small{display:block;margin-top:1.4rem;opacity:.7;font-size:.85rem}
   .venue-card address{margin:0}
   .venue .actions{justify-content:flex-start}
   .timeline::before{left:50%;margin-left:-1px}
+  .traveler{left:50%}
   .timeline li{width:50%;padding:0 3rem 3rem 0;text-align:right}
   .timeline li .ev-actions{justify-content:flex-end}
   .timeline li:nth-child(even){margin-left:50%;padding:0 0 3rem 3rem;text-align:left}
@@ -264,6 +314,7 @@ footer small{display:block;margin-top:1.4rem;opacity:.7;font-size:.85rem}
   *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
   .hero-copy>*{opacity:1;transform:none}
   #petals{display:none}
+  .diya-l .fl path{animation:none}
 }
 </style>
 </head>
@@ -278,10 +329,11 @@ footer small{display:block;margin-top:1.4rem;opacity:.7;font-size:.85rem}
 <nav class="lang" aria-label="Language"></nav>
 
 <header id="hero">
-  <div class="layer sun" data-depth=".18"></div>
-  <div class="layer mandala" data-depth=".3" id="mandala"></div>
+ <div class="stage">
+  <div class="layer sun"></div>
+  <div class="layer mandala" id="mandala"></div>
   <canvas id="petals" aria-hidden="true"></canvas>
-  <div class="layer toran" data-depth="-.06" aria-hidden="true"><svg viewBox="0 0 1200 120" preserveAspectRatio="none" id="toran"></svg></div>
+  <div class="layer toran" aria-hidden="true"><svg viewBox="0 0 1200 120" preserveAspectRatio="none" id="toran"></svg></div>
   <div class="layer arch" id="arch" aria-hidden="true">
         <svg viewBox="0 0 400 600" preserveAspectRatio="xMidYMid meet">
       <defs>
@@ -302,19 +354,31 @@ footer small{display:block;margin-top:1.4rem;opacity:.7;font-size:.85rem}
     <h1 class="names" id="names"></h1>
     <p class="when" id="when"></p>
   </div>
-  <a class="scroll-cue" href="#couple" aria-label="Scroll"></a>
+  <a class="scroll-cue" href="#lamps" aria-label="Scroll"></a>
+  <div class="veil" aria-hidden="true"></div>
+ </div>
 </header>
 
 <main id="main">
-  <div class="border-band" aria-hidden="true"></div>
 
-  <section class="page" id="couple" data-key="couple">
-    <div class="inner">
+  <section class="scene lamps" id="lamps" data-key="blessing" style="--len:260svh">
+    <div class="stage">
+      <div class="dotsbg" aria-hidden="true"></div>
+      <div class="rangoli" id="rangoli" aria-hidden="true"></div>
+      <div class="lamps-copy"><p class="kicker" id="t-lamps-k"></p><h2 id="t-lamps"></h2><p class="sub" id="t-lamps-sub"></p></div>
+      <div class="diyas" aria-hidden="true"><div class="diya-l"><div class="halo"></div><svg viewBox="0 0 80 70" aria-hidden="true"><g class="fl"><path d="M40 2c8 10 9 19 0 27c-9-8-8-17 0-27z" fill="#ff9e1b"/><path d="M40 11c3.5 5 3.5 10 0 14c-3.5-4-3.5-9 0-14z" fill="#fff3b0"/></g><path d="M6 40h68c-3 16-17 26-34 26S9 56 6 40z" style="fill:var(--haldi-dark)"/><path d="M6 40h68" style="stroke:var(--haldi)" stroke-width="3"/><path d="M30 48h20" style="stroke:var(--haldi-soft)" stroke-width="2" opacity=".6"/></svg></div><div class="diya-l"><div class="halo"></div><svg viewBox="0 0 80 70" aria-hidden="true"><g class="fl"><path d="M40 2c8 10 9 19 0 27c-9-8-8-17 0-27z" fill="#ff9e1b"/><path d="M40 11c3.5 5 3.5 10 0 14c-3.5-4-3.5-9 0-14z" fill="#fff3b0"/></g><path d="M6 40h68c-3 16-17 26-34 26S9 56 6 40z" style="fill:var(--haldi-dark)"/><path d="M6 40h68" style="stroke:var(--haldi)" stroke-width="3"/><path d="M30 48h20" style="stroke:var(--haldi-soft)" stroke-width="2" opacity=".6"/></svg></div><div class="diya-l"><div class="halo"></div><svg viewBox="0 0 80 70" aria-hidden="true"><g class="fl"><path d="M40 2c8 10 9 19 0 27c-9-8-8-17 0-27z" fill="#ff9e1b"/><path d="M40 11c3.5 5 3.5 10 0 14c-3.5-4-3.5-9 0-14z" fill="#fff3b0"/></g><path d="M6 40h68c-3 16-17 26-34 26S9 56 6 40z" style="fill:var(--haldi-dark)"/><path d="M6 40h68" style="stroke:var(--haldi)" stroke-width="3"/><path d="M30 48h20" style="stroke:var(--haldi-soft)" stroke-width="2" opacity=".6"/></svg></div><div class="diya-l"><div class="halo"></div><svg viewBox="0 0 80 70" aria-hidden="true"><g class="fl"><path d="M40 2c8 10 9 19 0 27c-9-8-8-17 0-27z" fill="#ff9e1b"/><path d="M40 11c3.5 5 3.5 10 0 14c-3.5-4-3.5-9 0-14z" fill="#fff3b0"/></g><path d="M6 40h68c-3 16-17 26-34 26S9 56 6 40z" style="fill:var(--haldi-dark)"/><path d="M6 40h68" style="stroke:var(--haldi)" stroke-width="3"/><path d="M30 48h20" style="stroke:var(--haldi-soft)" stroke-width="2" opacity=".6"/></svg></div><div class="diya-l"><div class="halo"></div><svg viewBox="0 0 80 70" aria-hidden="true"><g class="fl"><path d="M40 2c8 10 9 19 0 27c-9-8-8-17 0-27z" fill="#ff9e1b"/><path d="M40 11c3.5 5 3.5 10 0 14c-3.5-4-3.5-9 0-14z" fill="#fff3b0"/></g><path d="M6 40h68c-3 16-17 26-34 26S9 56 6 40z" style="fill:var(--haldi-dark)"/><path d="M6 40h68" style="stroke:var(--haldi)" stroke-width="3"/><path d="M30 48h20" style="stroke:var(--haldi-soft)" stroke-width="2" opacity=".6"/></svg></div></div>
+      <div class="veil" aria-hidden="true"></div>
+    </div>
+  </section>
+
+  <section class="scene" id="couple" data-key="couple" style="--len:220svh">
+    <div class="stage"><div class="inner">
       <svg class="motif" viewBox="0 0 120 24" aria-hidden="true"><path d="M0 12h44M76 12h44" stroke="currentColor"/><path d="M60 2c6 6 6 14 0 20c-6-6-6-14 0-20z" fill="currentColor"/><circle cx="48" cy="12" r="2.5" fill="currentColor"/><circle cx="72" cy="12" r="2.5" fill="currentColor"/></svg>
       <h2 id="t-couple"></h2>
       <p class="lede" id="t-couple-lede"></p>
       <div class="couple" id="couple-grid"></div>
-    </div>
+      <svg class="varmala" viewBox="0 0 560 70" aria-hidden="true"><path pathLength="1" d="M20 8C140 70 420 70 540 8" fill="none" stroke="currentColor" stroke-width="3" stroke-dasharray="1"/><g fill="#ff8a00"><circle cx="100" cy="38" r="5"/><circle cx="180" cy="54" r="5"/><circle cx="280" cy="59" r="6"/><circle cx="380" cy="54" r="5"/><circle cx="460" cy="38" r="5"/></g></svg>
+    </div></div>
   </section>
 
   <section class="page" id="countdown" data-key="countdown">
@@ -411,7 +475,7 @@ const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /* ───────── Copy in four languages ───────── */
 const I = {
-  en: { loc:'en-IN', ev_cal:'Add to calendar', ev_map:'Map', bless:'॥ Shri Ganeshaya Namah ॥', open:'Tap to open your invitation', side_groom:"Groom's side", side_bride:"Bride's side", invited_by:'Invited by {n}', dear:'Dear {n},',
+  en: { loc:'en-IN', lamps_k:'An auspicious beginning', lamps:'Lighting the lamps of blessing', lamps_sub:'With every diya, our two families come closer.', ev_cal:'Add to calendar', ev_map:'Map', bless:'॥ Shri Ganeshaya Namah ॥', open:'Tap to open your invitation', side_groom:"Groom's side", side_bride:"Bride's side", invited_by:'Invited by {n}', dear:'Dear {n},',
     invite:'With the blessings of our elders, we joyfully invite you to celebrate the wedding of', groom:'Sagar', bride:'Dhrupti', amp:'&',
     couple:'Two families, one celebration', couple_lede:'Your presence and blessings will make our day complete.', groomLbl:'The groom', brideLbl:'The bride',
     count:'Counting down to the pheras', d:'Days', h:'Hours', m:'Minutes', s:'Seconds', ics:'Save the date to my calendar',
@@ -426,7 +490,7 @@ const I = {
     wa:'Send on WhatsApp', again:'Edit my reply', chat:'Message us', who_groom:"Sagar's family", who_bride:"Dhrupti's family",
     foot_bless:'With love and blessings from both families', made:'We look forward to welcoming you.',
     wa_head:"RSVP · Sagar & Dhrupti's wedding", wa_name:'Name', wa_att:'Attendance', wa_guests:'Guests', wa_events:'Celebrations', wa_food:'Food', wa_msg:'Message', wa_hi:'Namaste! I have a question about the wedding.' },
-  gu: { loc:'gu-IN', ev_cal:'કૅલેન્ડરમાં ઉમેરો', ev_map:'નકશો', bless:'॥ શ્રી ગણેશાય નમઃ ॥', open:'આમંત્રણ ખોલવા અહીં સ્પર્શ કરો', side_groom:'વર પક્ષ', side_bride:'કન્યા પક્ષ', invited_by:'{n} તરફથી સ્નેહભર્યું આમંત્રણ', dear:'પ્રિય {n},',
+  gu: { loc:'gu-IN', lamps_k:'શુભ આરંભ', lamps:'આશીર્વાદના દીપ પ્રગટાવીએ', lamps_sub:'દરેક દીવા સાથે અમારા બે પરિવાર વધુ નજીક આવે છે.', ev_cal:'કૅલેન્ડરમાં ઉમેરો', ev_map:'નકશો', bless:'॥ શ્રી ગણેશાય નમઃ ॥', open:'આમંત્રણ ખોલવા અહીં સ્પર્શ કરો', side_groom:'વર પક્ષ', side_bride:'કન્યા પક્ષ', invited_by:'{n} તરફથી સ્નેહભર્યું આમંત્રણ', dear:'પ્રિય {n},',
     invite:'વડીલોના આશીર્વાદ સાથે, આપને સહર્ષ લગ્નોત્સવમાં પધારવા આમંત્રણ', groom:'સાગર', bride:'ધ્રુપ્તિ', amp:'સંગ',
     couple:'બે પરિવાર, એક ઉત્સવ', couple_lede:'આપની હાજરી અને આશીર્વાદથી અમારો દિવસ પૂર્ણ થશે.', groomLbl:'વરરાજા', brideLbl:'કન્યા',
     count:'ફેરાને હવે બાકી', d:'દિવસ', h:'કલાક', m:'મિનિટ', s:'સેકન્ડ', ics:'તારીખ કૅલેન્ડરમાં સાચવો',
@@ -441,7 +505,7 @@ const I = {
     wa:'WhatsApp પર મોકલો', again:'જવાબ બદલો', chat:'સંદેશ મોકલો', who_groom:'સાગરના પરિવાર', who_bride:'ધ્રુપ્તિના પરિવાર',
     foot_bless:'બંને પરિવાર તરફથી સ્નેહ અને આશીર્વાદ', made:'આપના સ્વાગત માટે આતુર છીએ.',
     wa_head:'RSVP · સાગર અને ધ્રુપ્તિના લગ્ન', wa_name:'નામ', wa_att:'હાજરી', wa_guests:'મહેમાન', wa_events:'પ્રસંગો', wa_food:'ભોજન', wa_msg:'સંદેશ', wa_hi:'નમસ્તે! લગ્ન વિશે એક પ્રશ્ન છે.' },
-  hi: { loc:'hi-IN', ev_cal:'कैलेंडर में जोड़ें', ev_map:'नक्शा', bless:'॥ श्री गणेशाय नमः ॥', open:'निमंत्रण खोलने के लिए यहाँ छुएँ', side_groom:'वर पक्ष', side_bride:'कन्या पक्ष', invited_by:'{n} की ओर से सप्रेम निमंत्रण', dear:'प्रिय {n},',
+  hi: { loc:'hi-IN', lamps_k:'शुभ आरंभ', lamps:'आशीर्वाद के दीप जलाएँ', lamps_sub:'हर दीये के साथ हमारे दो परिवार और करीब आते हैं।', ev_cal:'कैलेंडर में जोड़ें', ev_map:'नक्शा', bless:'॥ श्री गणेशाय नमः ॥', open:'निमंत्रण खोलने के लिए यहाँ छुएँ', side_groom:'वर पक्ष', side_bride:'कन्या पक्ष', invited_by:'{n} की ओर से सप्रेम निमंत्रण', dear:'प्रिय {n},',
     invite:'बड़ों के आशीर्वाद से, हम आपको सहर्ष विवाह उत्सव में आमंत्रित करते हैं', groom:'सागर', bride:'ध्रुप्ति', amp:'संग',
     couple:'दो परिवार, एक उत्सव', couple_lede:'आपकी उपस्थिति और आशीर्वाद से हमारा दिन पूरा होगा।', groomLbl:'दूल्हा', brideLbl:'दुल्हन',
     count:'फेरों में अब बाकी', d:'दिन', h:'घंटे', m:'मिनट', s:'सेकंड', ics:'तारीख कैलेंडर में सेव करें',
@@ -456,7 +520,7 @@ const I = {
     wa:'WhatsApp पर भेजें', again:'जवाब बदलें', chat:'संदेश भेजें', who_groom:'सागर के परिवार', who_bride:'ध्रुप्ति के परिवार',
     foot_bless:'दोनों परिवारों की ओर से स्नेह और आशीर्वाद', made:'आपके स्वागत की प्रतीक्षा है।',
     wa_head:'RSVP · सागर और ध्रुप्ति का विवाह', wa_name:'नाम', wa_att:'उपस्थिति', wa_guests:'मेहमान', wa_events:'कार्यक्रम', wa_food:'भोजन', wa_msg:'संदेश', wa_hi:'नमस्ते! विवाह के बारे में एक सवाल है।' },
-  mr: { loc:'mr-IN', ev_cal:'कॅलेंडरमध्ये जोडा', ev_map:'नकाशा', bless:'॥ श्री गणेशाय नमः ॥', open:'निमंत्रण उघडण्यासाठी येथे स्पर्श करा', side_groom:'वर पक्ष', side_bride:'वधू पक्ष', invited_by:'{n} यांच्याकडून सप्रेम निमंत्रण', dear:'प्रिय {n},',
+  mr: { loc:'mr-IN', lamps_k:'शुभारंभ', lamps:'आशीर्वादाचे दीप उजळूया', lamps_sub:'प्रत्येक दिव्यासोबत आमची दोन कुटुंबे अधिक जवळ येतात.', ev_cal:'कॅलेंडरमध्ये जोडा', ev_map:'नकाशा', bless:'॥ श्री गणेशाय नमः ॥', open:'निमंत्रण उघडण्यासाठी येथे स्पर्श करा', side_groom:'वर पक्ष', side_bride:'वधू पक्ष', invited_by:'{n} यांच्याकडून सप्रेम निमंत्रण', dear:'प्रिय {n},',
     invite:'वडीलधाऱ्यांच्या आशीर्वादाने, आम्ही आपल्याला सहर्ष विवाह सोहळ्यास आमंत्रित करतो', groom:'सागर', bride:'ध्रुप्ति', amp:'संग',
     couple:'दोन कुटुंबे, एक सोहळा', couple_lede:'आपली उपस्थिती आणि आशीर्वाद आमचा दिवस पूर्ण करतील.', groomLbl:'नवरदेव', brideLbl:'नवरी',
     count:'फेऱ्यांना आता बाकी', d:'दिवस', h:'तास', m:'मिनिटे', s:'सेकंद', ics:'तारीख कॅलेंडरमध्ये जतन करा',
@@ -535,6 +599,7 @@ function toranSVG() {
 }
 $('mandala').innerHTML = mandalaSVG();
 $('bgm').innerHTML = mandalaSVG();
+$('rangoli').innerHTML = mandalaSVG();
 $('toran').innerHTML = toranSVG();
 const ICON = {
   wedding: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3c3 4 3 7 0 10c-3-3-3-6 0-10z" fill="currentColor"/><path d="M5 15h14l-2 6H7z"/></svg>',
@@ -565,17 +630,18 @@ function draw() {
   if (previewTheme) settings.theme = { groom: previewTheme, bride: previewTheme };
   applyTheme();
   renderSections();
+  set('t-lamps-k', 'lamps_k'); set('t-lamps', 'lamps'); set('t-lamps-sub', 'lamps_sub');
   set('t-couple', 'couple'); set('t-couple-lede', 'couple_lede');
   const c = settings.couple || {};
-  const person = (nm, lbl, photo) => `<div class="person"><div class="medal">${photo ? `<img src="${esc(photo)}" alt="${esc(nm)}" loading="lazy">` : `<b aria-hidden="true">${esc([...nm][0] || '')}</b>`}</div><h3>${esc(nm)}</h3><p>${esc(lbl)}</p></div>`;
-  const g = person(isBrideSide() ? b : a, T('groomLbl'), c.groom_photo), br = person(isBrideSide() ? a : b, T('brideLbl'), c.bride_photo);
+  const person = (nm, lbl, photo, cls) => `<div class="person ${cls}"><div class="medal">${photo ? `<img src="${esc(photo)}" alt="${esc(nm)}" loading="lazy">` : `<b aria-hidden="true">${esc([...nm][0] || '')}</b>`}</div><h3>${esc(nm)}</h3><p>${esc(lbl)}</p></div>`;
+  const g = person(isBrideSide() ? b : a, T('groomLbl'), c.groom_photo, isBrideSide() ? 'r' : 'l'), br = person(isBrideSide() ? a : b, T('brideLbl'), c.bride_photo, isBrideSide() ? 'l' : 'r');
   $('couple-grid').innerHTML = (isBrideSide() ? br + knotSVG + g : g + knotSVG + br);
 
   set('t-count', 'count'); set('ics', 'ics');
   set('t-events', 'events'); set('t-events-lede', 'events_lede');
   const tf = new Intl.DateTimeFormat(T('loc'), { timeStyle: 'short', timeZone: 'Asia/Kolkata' });
   $('t-events-lede').hidden = events.every(e => e.starts_at);
-  $('timeline').innerHTML = events.map(e => {
+  $('timeline').innerHTML = '<span class="traveler" aria-hidden="true"></span>' + events.map(e => {
     const when = e.starts_at ? df.format(new Date(e.starts_at)) + ' · ' + tf.format(new Date(e.starts_at)) : (e.event_date ? df.format(new Date(e.event_date + 'T00:00:00+05:30')) : T('time_tba'));
     return `<li><span class="dot" aria-hidden="true">${ICON[e.event_type] || ICON.other}</span><h3>${esc(pick(e.title))}</h3><time>${esc(when)}</time>${pick(e.description) ? `<p>${esc(pick(e.description))}</p>` : ''}${e.venue_name ? `<small>${esc(e.venue_name)}</small>` : ''}<span class="ev-actions"><a class="mini" target="_blank" rel="noopener" href="${esc(gcalLink(e))}">${esc(T('ev_cal'))}</a><a class="mini" target="_blank" rel="noopener" href="${esc(mapLink(e))}">${esc(T('ev_map'))}</a></span></li>`;
   }).join('');
@@ -602,6 +668,7 @@ function draw() {
 
   $('foot-names').textContent = `${a} & ${b}`; $('foot-date').textContent = df.format(date) + ' · ' + (v.name || '');
   set('foot-bless', 'foot_bless'); set('foot-small', 'made');
+  if (!reduce) kick();
   $('fab').href = waLink(T('wa_hi')); $('fab-lbl').textContent = T('chat'); $('fab').setAttribute('aria-label', T('chat') + ' · WhatsApp');
   if (!$('f').guest_name.value && guestName) $('f').guest_name.value = guestName;
   document.querySelectorAll('.lang button').forEach(x => x.setAttribute('aria-pressed', x.dataset.l === L));
@@ -709,29 +776,71 @@ $('ics').addEventListener('click', () => {
   document.body.appendChild(link); link.click(); link.remove(); setTimeout(() => URL.revokeObjectURL(url), 2000);
 });
 
-/* ───────── Parallax (rAF-throttled, transform-only) ───────── */
-const hero = $('hero'), heroCopy = $('hero-copy'), arch = $('arch');
+/* ───────── Cinematic scroll engine ─────────
+   Each scene maps its scroll progress (0→1) to CSS variables. Progress is eased
+   toward the real scroll position every frame, so wheel steps and flicks glide
+   like a video instead of jumping. Transform/opacity only. */
+const hero = $('hero');
+const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+const seg = (p, a, b) => ease(clamp((p - a) / (b - a)));
+const setv = (el, o) => { for (const k in o) el.style.setProperty(k, o[k]) };
+const SCENES = [
+  { el: hero, run(p, el) {
+      const z = seg(p, .12, .92), out = seg(p, .3, .62);
+      setv(el, { '--arch': (1 + z * z * 3.2).toFixed(4), '--archo': (1 - seg(p, .72, .95)).toFixed(3), '--sun': (1 + z * 1.6).toFixed(3),
+        '--rot': (p * 110).toFixed(2) + 'deg', '--msc': (1 + z * .6).toFixed(3), '--tor': (-seg(p, .05, .45) * 140).toFixed(1) + 'px',
+        '--copyo': (1 - out).toFixed(3), '--copyy': (-out * 70).toFixed(1) + 'px', '--copys': (1 - out * .1).toFixed(3), '--veil': seg(p, .82, 1).toFixed(3) });
+  } },
+  /* entry: progress starts while the scene slides in, so nothing waits on an empty screen */
+  { el: $('lamps'), entry: true, run(p, el) {
+      const d = el.querySelectorAll('.diya-l'); let warm = 0;
+      d.forEach((x, i) => { const k = seg(p, .44 + i * .07, .52 + i * .07); x.style.setProperty('--k', k.toFixed(3)); warm += k });
+      setv(el, { '--t1': seg(p, .14, .32).toFixed(3), '--t2': seg(p, .8, .88).toFixed(3), '--warm': (warm / d.length).toFixed(3),
+        '--rr': (p * 80).toFixed(2) + 'deg', '--rs': (.7 + seg(p, .55, .92) * .45).toFixed(3), '--ro': seg(p, .5, .8).toFixed(3), '--veil': seg(p, .92, 1).toFixed(3) });
+  } },
+  { el: $('couple'), entry: true, run(p, el) {
+      setv(el, { '--ch': seg(p, .12, .36).toFixed(3), '--ck': seg(p, .3, .68).toFixed(3), '--kk': seg(p, .64, .76).toFixed(3), '--vm': seg(p, .7, .88).toFixed(3), '--cl': seg(p, .8, .92).toFixed(3) });
+  } }
+];
 const layers = [...document.querySelectorAll('[data-depth]')];
-let ticking = false;
-function parallax() {
-  ticking = false;
-  const vh = innerHeight, y = scrollY, p = Math.min(1, Math.max(0, y / vh));
-  if (y < vh * 1.2) {
-    arch.style.transform = `scale(${1 + p * 1.6})`;
-    arch.style.opacity = String(1 - Math.max(0, p - .55) / .45);
-    heroCopy.style.transform = `translate(-50%, calc(-50% + ${y * .35}px)) scale(${1 - p * .12})`;
-    heroCopy.style.opacity = String(1 - p * 1.3);
-  }
+const state = SCENES.map(() => ({ cur: 0, tgt: 0 }));
+let looping = false, tlCur = 0;
+function progress(el, entry) {
+  const r = el.getBoundingClientRect(), total = r.height - innerHeight;
+  if (entry) return clamp((innerHeight - r.top) / Math.max(1, r.height));
+  return total > 1 ? clamp(-r.top / total) : clamp((innerHeight - r.top) / (innerHeight + r.height));
+}
+function frame() {
+  let moving = false;
+  SCENES.forEach((sc, i) => {
+    const st = state[i]; if (!sc.el || sc.el.hidden) return;
+    st.tgt = progress(sc.el, sc.entry);
+    const d = st.tgt - st.cur;
+    st.cur = Math.abs(d) < .0005 ? st.tgt : st.cur + d * .12;
+    if (st.cur !== st.tgt) moving = true;
+    const r = sc.el.getBoundingClientRect();
+    if (r.bottom > -50 && r.top < innerHeight + 50) sc.run(st.cur, sc.el);
+  });
+  const tl = $('timeline'), tr = tl.getBoundingClientRect();
+  const tt = clamp((innerHeight * .72 - tr.top) / Math.max(1, tr.height));
+  tlCur = Math.abs(tt - tlCur) < .0005 ? tt : tlCur + (tt - tlCur) * .12; if (tlCur !== tt) moving = true;
+  tl.style.setProperty('--line', tlCur.toFixed(4));
+  tl.querySelectorAll('li').forEach(li => li.classList.toggle('on', li.offsetTop <= tlCur * tr.height + 24));
+  const vh = innerHeight;
   for (const el of layers) {
     const box = el.parentElement.getBoundingClientRect();
     if (box.bottom < -100 || box.top > vh + 100) continue;
     el.style.transform = `translate3d(0, ${(-(box.top + box.height / 2 - vh / 2) * el.dataset.depth).toFixed(1)}px, 0)`;
   }
-  const tl = $('timeline').getBoundingClientRect();
-  if (tl.top < vh * .85) $('timeline').style.setProperty('--line', '1');
+  if (moving) requestAnimationFrame(frame); else looping = false;
 }
-if (!reduce) { addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(parallax) } }, { passive: true }); addEventListener('resize', parallax) }
-else $('timeline').style.setProperty('--line', '1');
+const kick = () => { if (!looping) { looping = true; requestAnimationFrame(frame) } };
+if (!reduce) {
+  document.body.classList.add('cine');
+  addEventListener('scroll', kick, { passive: true }); addEventListener('resize', kick);
+  kick();
+}
 
 /* ───────── Marigold petals (canvas, paused off-screen) ───────── */
 let petalsOn = false;
@@ -742,7 +851,7 @@ function startPetals() {
   size(); addEventListener('resize', size);
   const count = W < 600 ? 22 : 40, cols = ['#f2b705', '#ff8a00', '#ffd75e', '#e8412f'];
   const P = Array.from({ length: count }, () => ({ x: Math.random() * W, y: Math.random() * Hh - Hh, r: 4 + Math.random() * 6, s: .4 + Math.random() * .9, a: Math.random() * 6.28, w: .01 + Math.random() * .02, c: cols[Math.random() * 4 | 0] }));
-  new IntersectionObserver(([e]) => { visible = e.isIntersecting; if (visible) requestAnimationFrame(frame) }).observe(hero);
+  new IntersectionObserver(([e]) => { visible = e.isIntersecting; if (visible) requestAnimationFrame(frame) }).observe(hero.querySelector('.stage'));
   function frame() {
     if (!visible) return;
     ctx.clearRect(0, 0, W, Hh);
