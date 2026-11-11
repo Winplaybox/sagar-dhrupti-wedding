@@ -468,7 +468,7 @@ const store = { get: k => { try { return localStorage.getItem(k) } catch { retur
 let L = I[qs.get('lang')] ? qs.get('lang') : (I[store.get('l')] ? store.get('l') : 'gu');
 let refs = { ...C.refs };
 let ref = C.resolveRef(qs.get('ref'), refs);
-const askedRef = C.normalizeCode(qs.get('ref'));
+const askedRef = C.aliasRef(C.normalizeCode(qs.get('ref')));
 let settings = { couple: { ...C.couple }, venue: { ...C.venue } };
 let allEvents = C.events.slice(), events = [], sections = [];
 let guestName = (qs.get('to') || '').trim().slice(0, 60);
