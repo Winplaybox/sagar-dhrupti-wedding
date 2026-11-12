@@ -139,17 +139,35 @@ details.item[open]{box-shadow:0 10px 30px -18px #7d0a2066}
 #toast.show{transform:translate(-50%,0)}
 #toast.err{background:var(--sindoor);color:#fff}
 
+/* mobile top bar + drawer (hidden on desktop) */
+.topbar,.scrim,.drawer-close{display:none}
 @media (max-width:900px){
   .shell{grid-template-columns:1fr}
-  aside{position:sticky;top:0;z-index:20;height:auto;flex-direction:row;flex-wrap:wrap;align-items:center;padding:.6rem .7rem;gap:.4rem}
-  .brand{border:0;padding:0;margin:0;flex:1}
-  .brand small{display:none}
-  #nav{order:3;flex-direction:row;width:100%;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding-bottom:2px}
-  #nav::-webkit-scrollbar{display:none}
-  #nav button{flex:none;padding:.5rem .75rem;font-size:.9rem}
-  .me{margin:0;padding:0;border:0;display:flex;align-items:center}
-  .me .who span,.me .who em{display:none}
-  .me .btn{min-height:34px;padding:.3rem .7rem}
+  .topbar{display:flex;align-items:center;gap:.6rem;position:sticky;top:0;z-index:30;height:calc(56px + env(safe-area-inset-top));padding:env(safe-area-inset-top) .75rem 0;background:var(--night);color:#ffe2b8;box-shadow:0 2px 12px #0003}
+  .topbar .burger{width:44px;height:44px;border:0;border-radius:12px;background:transparent;color:#ffe2b8;display:grid;place-items:center;cursor:pointer}
+  .topbar .burger:active{background:#ffffff14}
+  .topbar .burger svg{width:24px;height:24px}
+  .topbar .title{flex:1;min-width:0;font:400 1.15rem/1.2 'Rozha One',serif;color:var(--haldi);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .topbar img{width:32px;height:32px;border-radius:50%}
+  aside{position:fixed;inset:0 auto 0 0;z-index:50;width:min(84vw,300px);height:100dvh;padding:calc(1rem + env(safe-area-inset-top)) .8rem calc(1rem + env(safe-area-inset-bottom));transform:translateX(-105%);transition:transform .32s cubic-bezier(.22,1,.36,1),box-shadow .32s;overflow-y:auto;overscroll-behavior:contain;visibility:hidden}
+  body.drawer-open aside{transform:none;box-shadow:12px 0 40px #0007;visibility:visible}
+  .scrim{display:block;position:fixed;inset:0;z-index:40;background:#1a0309;opacity:0;pointer-events:none;transition:opacity .32s}
+  body.drawer-open .scrim{opacity:.55;pointer-events:auto}
+  body.drawer-open{overflow:hidden}
+  .drawer-close{display:grid;place-items:center;position:absolute;top:calc(.7rem + env(safe-area-inset-top));right:.6rem;width:40px;height:40px;border:0;border-radius:10px;background:#ffffff12;color:#ffe2b8;cursor:pointer}
+  .drawer-close svg{width:20px;height:20px}
+  .brand{padding-right:2.6rem}
+  #nav button{padding:.8rem .9rem;font-size:1rem}
+  main{padding:1rem .85rem calc(2rem + env(safe-area-inset-bottom))}
+  .head{margin-bottom:1rem}
+  .head .row{width:100%}
+  .head .row .btn{flex:1}
+  .card{padding:1rem}
+  .form-grid{grid-template-columns:1fr}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .toolbar input,.toolbar select{flex:1 1 100%}
+  .refs{grid-template-columns:1fr}
+  .copybox code{font-size:.78rem}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
@@ -171,7 +189,14 @@ details.item[open]{box-shadow:0 10px 30px -18px #7d0a2066}
 </section>
 
 <div class="shell" id="app" hidden>
-  <aside>
+  <header class="topbar">
+    <button class="burger" id="burger" type="button" aria-label="Open menu" aria-controls="drawer" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+    <span class="title" id="top-title">Dashboard</span>
+    <img id="top-img" alt="" hidden>
+  </header>
+  <div class="scrim" id="scrim" aria-hidden="true"></div>
+  <aside id="drawer" aria-label="Menu">
+    <button class="drawer-close" id="drawer-close" type="button" aria-label="Close menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     <div class="brand"><div class="seal" aria-hidden="true">S&amp;D</div><div><b>Sagar &amp; Dhrupti</b><small id="brand-sub">Wedding dashboard</small></div></div>
     <nav id="nav" aria-label="Sections"></nav>
     <div class="me"><div class="who"><img id="me-img" alt="" hidden><span><span id="me-name"></span><em id="me-role"></em></span></div><button class="btn sec small" id="out" type="button">Sign out</button></div>
@@ -315,7 +340,7 @@ async function boot(session) {
   me = profile;
   $('login').hidden = true; $('app').hidden = false;
   const avatar = user.user_metadata?.avatar_url;
-  if (avatar) { $('me-img').src = avatar; $('me-img').hidden = false }
+  if (avatar) { $('me-img').src = avatar; $('me-img').hidden = false; $('top-img').src = avatar; $('top-img').hidden = false }
   await loadContext();
   $('me-name').textContent = member?.display_name || me.display_name || user.email;
   $('me-role').textContent = ROLE[me.role] + (member?.side ? ' · ' + SIDE[member.side] : '');
@@ -343,7 +368,7 @@ async function loadContext() {
 
 /* ───────── First sign-in: which side? ───────── */
 function onboarding() {
-  renderNav(); $('nav').hidden = true;
+  renderNav(); $('nav').hidden = true; $('burger').hidden = true; $('top-title').textContent = 'Welcome';
   const m = $('main');
   m.innerHTML = `<div class="card" style="max-width:620px;margin:6vh auto 0">
     <div class="seal" aria-hidden="true" style="width:64px;height:64px;font-size:1.2rem;margin:0 0 1rem">S&amp;D</div>
@@ -365,7 +390,7 @@ function onboarding() {
     side = b.dataset.side;
     m.querySelectorAll('[data-side]').forEach(x => { const on = x === b; x.className = 'btn ' + (on ? '' : 'sec'); x.setAttribute('aria-checked', on) });
   });
-  if ($('ob-skip')) $('ob-skip').onclick = () => { sessionStorage.setItem('skipSide', '1'); $('nav').hidden = false; show() };
+  if ($('ob-skip')) $('ob-skip').onclick = () => { sessionStorage.setItem('skipSide', '1'); $('nav').hidden = false; $('burger').hidden = false; show() };
   $('ob-go').onclick = async e => {
     const err = $('ob-err'); err.textContent = '';
     const wa = phoneIntl($('ob-wa').value);
@@ -376,7 +401,7 @@ function onboarding() {
     const { data, error } = await S.rpc('complete_my_onboarding', { p_side: side, p_relation: $('ob-rel').value || null, p_display_name: $('ob-name').value.trim(), p_whatsapp: wa });
     e.target.disabled = false;
     if (error) return err.textContent = missing(error) ? 'The database update for this step is pending. Ask the admin to run the latest migration.' : error.message;
-    await loadContext(); $('nav').hidden = false;
+    await loadContext(); $('nav').hidden = false; $('burger').hidden = false;
     $('me-name').textContent = member?.display_name || user.email; $('me-role').textContent = ROLE[me.role] + ' · ' + SIDE[side];
     toast(data ? `You're set! Your invite link: ?ref=${data}` : 'Saved'); tab = 'overview'; show();
   };
@@ -384,9 +409,26 @@ function onboarding() {
 
 /* ───────── shell ───────── */
 function renderNav() {
+  const cur = NAV.find(n => n[0] === tab); $('top-title').textContent = cur ? cur[1] : 'Dashboard';
   $('nav').innerHTML = NAV.filter(n => allowed(n[0])).map(([k, label, icon]) => `<button type="button" data-tab="${k}" ${k === tab ? 'aria-current="page"' : ''}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${icon}</svg>${label}</button>`).join('');
 }
-function go(t) { tab = t; location.hash = t; show(); $('main').focus({ preventScroll: true }); scrollTo(0, 0) }
+const mobile = matchMedia('(max-width:900px)');
+function drawer(open) {
+  document.body.classList.toggle('drawer-open', open);
+  $('burger').setAttribute('aria-expanded', open);
+  if (open) { const cur = $('nav').querySelector('[aria-current=page]') || $('nav').querySelector('button'); cur && cur.focus({ preventScroll: true }) }
+  else if (mobile.matches && document.activeElement && $('drawer').contains(document.activeElement)) $('burger').focus({ preventScroll: true });
+}
+$('burger').onclick = () => drawer(true);
+$('drawer-close').onclick = () => drawer(false);
+$('scrim').onclick = () => drawer(false);
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.body.classList.contains('drawer-open')) drawer(false) });
+mobile.addEventListener('change', () => drawer(false));
+/* swipe left on the drawer to close it */
+let sx = null;
+$('drawer').addEventListener('touchstart', e => { sx = e.touches[0].clientX }, { passive: true });
+$('drawer').addEventListener('touchend', e => { if (sx !== null && sx - e.changedTouches[0].clientX > 60) drawer(false); sx = null }, { passive: true });
+function go(t) { tab = t; location.hash = t; drawer(false); show(); $('main').focus({ preventScroll: true }); scrollTo(0, 0) }
 $('nav').addEventListener('click', e => { const b = e.target.closest('[data-tab]'); if (b) go(b.dataset.tab) });
 addEventListener('hashchange', () => { const t = location.hash.slice(1); if (t && t !== tab && me) { tab = t; show() } });
 function head(title, sub, actions) { return `<div class="head"><div><h1>${title}</h1>${sub ? `<p>${sub}</p>` : ''}</div><div class="row">${actions || ''}</div></div>` }
