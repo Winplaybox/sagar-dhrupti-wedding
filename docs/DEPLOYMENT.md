@@ -62,6 +62,18 @@ Reuse the existing Google Cloud project (the one used for the YouTube automation
 - **Design & theme** (admins): pick a theme per side (Kankotri, Vanam, Gulab, Neelam), heading font and fine-tune colours. Stored in `site_settings.theme`; *Preview* opens the invitation with `&theme=…` before saving.
 - **Auto-translate**: every four-language field group has a ✨ Translate button; leaving the English box fills the empty languages. Runs in the admin's browser through Google Translate (MyMemory as fallback), the same service Python `googletrans` uses, so no server is needed. Always proof-read names.
 
+## Shagun (blessing gifts) and payments
+
+Admin → **Shagun & payments**, separately for the groom's and bride's side:
+- **GPay / UPI**: UPI ID, name and an uploaded QR. Guests tap *Pay with GPay / UPI app* (opens GPay/PhonePe/Paytm with the amount filled) or scan the QR. Money goes straight to that bank account, no fees, nothing stored.
+- **Online (Dodo Payments)**: cards, UPI, net banking and international payments through `/api/shagun-checkout` (a Vercel function).
+
+One-time Dodo setup:
+1. Vercel → Project → Settings → **Environment Variables** (Production): add `DODO_API_KEY_GROOM` and `DODO_API_KEY_BRIDE` (or a single `DODO_API_KEY` for both). Keys starting `dodo_test_` use Dodo's test mode. Redeploy.
+2. Admin → Shagun & payments → **Create shagun product in Dodo** for each side (creates a pay-what-you-want INR product, minimum ₹11), tick *Offer online payment*, **Save payments**.
+
+The key is only read by `api/_dodo.js` on the server and is never sent to the browser. `/api/shagun-setup` only answers signed-in admins (checked with Supabase `claim_access` using the caller's own token).
+
 ## Security notes
 
 Never put the service-role or `sb_secret_` key in `site/`, Git or browser-exposed env vars. The build checker fails if one appears.

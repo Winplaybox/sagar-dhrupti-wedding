@@ -236,6 +236,7 @@ const NAV = [
   ['events', 'Events', '<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4m8-4v4"/>', 'admin'],
   ['sections', 'Sections & text', '<path d="M4 5h16M4 12h16M4 19h10"/>', 'admin'],
   ['design', 'Design & theme', '<circle cx="13.5" cy="6.5" r="1.5"/><circle cx="17.5" cy="10.5" r="1.5"/><circle cx="8.5" cy="7.5" r="1.5"/><circle cx="6.5" cy="12.5" r="1.5"/><path d="M12 2a10 10 0 0 0 0 20c1 0 1.7-.8 1.7-1.7 0-.4-.2-.8-.4-1.1-.3-.3-.4-.7-.4-1.1 0-.9.8-1.7 1.7-1.7H16a6 6 0 0 0 6-6c0-4.4-4.5-8.4-10-8.4z"/>', 'admin'],
+  ['payments', 'Shagun & payments', '<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h4"/>', 'admin'],
   ['gallery', 'Gallery', '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/>', 'admin'],
   ['settings', 'Couple & venue', '<path d="M12 21s-7-4.4-9.3-9A5 5 0 0 1 12 6a5 5 0 0 1 9.3 6c-2.3 4.6-9.3 9-9.3 9z"/>', 'admin'],
   ['people', 'People & access', '<path d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5z"/>', 'admin'],
@@ -449,7 +450,7 @@ const SPEC = {
     ['venue_name', 'Venue name'], ['venue_address', 'Venue address'], ['maps_url', 'Google Maps link'], ['description', 'Description', 'i18n'], ['sort_order', 'Order on the timeline', 'num'], ['is_published', 'Show on invitation', 'bool']] },
   site_sections: { o: 'sort_order', label: r => (r.title && (r.title.en || r.title.gu)) || r.kind, pills: r => [r.kind, SIDE[r.audience || 'both'], 'order ' + r.sort_order], f: [
     ['kind', 'Section style', 'sel', [['text', 'Text'], ['image', 'Photo with text'], ['quote', 'Blessing / shloka (dark band)'], ['list', 'Names list (e.g. family, “Swagatotsuk”)']]],
-    ['audience', 'Who sees it', 'sel', AUD], ['sort_order', 'Position', 'num', null, 'Built-in sections: diya scene 5 · couple 10 · countdown 20 · events 30 · venue 40 · gallery 50 · RSVP 60'], ['image_url', 'Photo URL (photo style)', 'wide'],
+    ['audience', 'Who sees it', 'sel', AUD], ['sort_order', 'Position', 'num', null, 'Built-in sections: diya scene 5 · couple 10 · countdown 20 · events 30 · venue 40 · gallery 50 · shagun 55 · RSVP 60'], ['image_url', 'Photo URL (photo style)', 'wide'],
     ['title', 'Heading', 'i18n'], ['body', 'Text', 'i18nl', null, 'Blank line = new paragraph. Names list: one name per line, add a relation after |, e.g. “Rameshbhai Suthar | Father”.'], ['is_published', 'Show on invitation', 'bool']] }
 };
 async function crud(m, table, title, sub, extra) {
@@ -617,8 +618,8 @@ const VIEWS = {
 
   async sections(m) {
     const lay = settingsCache.layout || {};
-    const BUILT = [['blessing', 'Diya scene (scroll animation)'], ['couple', 'Couple'], ['countdown', 'Countdown'], ['events', 'Events timeline'], ['venue', 'Venue & map'], ['gallery', 'Gallery'], ['rsvp', 'RSVP form']];
-    const COPY = [['invite', 'Invitation line (hero)'], ['lamps_k', 'Diya scene: small line'], ['lamps', 'Diya scene: heading'], ['lamps_sub', 'Diya scene: sub-line'], ['couple', 'Couple heading'], ['couple_lede', 'Couple sub-line'], ['count', 'Countdown heading'], ['events', 'Events heading'], ['events_lede', 'Events sub-line'], ['rsvp', 'RSVP heading'], ['rsvp_lede', 'RSVP sub-line'], ['foot_bless', 'Footer blessing'], ['made', 'Footer last line']];
+    const BUILT = [['blessing', 'Diya scene (scroll animation)'], ['couple', 'Couple'], ['countdown', 'Countdown'], ['events', 'Events timeline'], ['venue', 'Venue & map'], ['gallery', 'Gallery'], ['shagun', 'Shagun / blessings'], ['rsvp', 'RSVP form']];
+    const COPY = [['invite', 'Invitation line (hero)'], ['lamps_k', 'Diya scene: small line'], ['lamps', 'Diya scene: heading'], ['lamps_sub', 'Diya scene: sub-line'], ['couple', 'Couple heading'], ['couple_lede', 'Couple sub-line'], ['count', 'Countdown heading'], ['events', 'Events heading'], ['events_lede', 'Events sub-line'], ['rsvp', 'RSVP heading'], ['rsvp_lede', 'RSVP sub-line'], ['shagun', 'Shagun heading'], ['shagun_lede', 'Shagun sub-line'], ['foot_bless', 'Footer blessing'], ['made', 'Footer last line']];
     const copy = settingsCache.copy || {};
     const extra = `<div class="card"><h2>Built-in sections</h2><p class="sub">Lower numbers come first. Custom sections below use the same numbers.</p><div class="list">${BUILT.map(([k, l]) => { const c = typeof lay[k] === 'object' ? lay[k] : {}; return `<div class="item" style="grid-template-columns:1fr auto auto;align-items:center"><b>${l}</b><input type="number" data-lay="${k}" value="${c.order ?? C.layout[k]}" style="width:90px" aria-label="${l} position"><label class="check"><input type="checkbox" data-vis="${k}" ${c.hidden ? '' : 'checked'}>Show</label></div>` }).join('')}</div><div class="row" style="margin-top:.8rem"><span class="spacer"></span><button class="btn" id="save-lay" type="button">Save order</button></div></div>
       <div class="card"><details><summary style="cursor:pointer;font-weight:700">Invitation text (optional overrides)</summary><p class="sub" style="margin-top:.6rem">Leave a box empty to keep the built-in wording for that language.</p>${COPY.map(([k, l]) => `<fieldset class="i18n" style="margin-bottom:.7rem"><legend>${l}</legend>${LG.map(g => `<label class="f">${LGN[g]}<input data-copy-k="${k}" data-l="${g}" value="${esc((copy[k] || {})[g])}"></label>`).join('')}</fieldset>`).join('')}<div class="row"><span class="spacer"></span><button class="btn" id="save-copy" type="button">Save text</button></div></details></div>
@@ -659,6 +660,69 @@ const VIEWS = {
       refresh(box);
     });
     $('save-theme').onclick = e => saveSetting('theme', { groom: read(m.querySelector('[data-side=groom]')), bride: read(m.querySelector('[data-side=bride]')) }, e.target);
+  },
+
+  async payments(m) {
+    const pay = JSON.parse(JSON.stringify(settingsCache.payments || {}));
+    const token = async () => (await S.auth.getSession()).data.session?.access_token;
+    const api = async (body) => { const r = await fetch('/api/shagun-setup', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + (await token()) }, body: JSON.stringify(body) }); const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error || 'Request failed (' + r.status + ')'); return j };
+    const card = sd => {
+      const c = pay[sd] || {}, d = c.dodo || {};
+      return `<div class="card" data-side="${sd}"><div class="row"><h2>${SIDE[sd]}</h2><span class="spacer"></span><a class="btn sec small" target="_blank" rel="noopener" href="${SITE}/?ref=${sd}&skip#shagun">${I.open}Preview</a></div>
+        <label class="check" style="margin:.4rem 0 .9rem"><input type="checkbox" data-k="enabled" ${c.enabled ? 'checked' : ''}>Show the Shagun section to ${sd === 'groom' ? "groom's" : "bride's"} side guests</label>
+        <h3 style="font-size:.95rem;margin:.4rem 0">GPay / UPI (direct to your bank, no fees)</h3>
+        <div class="form-grid"><label class="f">Name shown to guests<input data-k="payee" value="${esc(c.payee)}" placeholder="${sd === 'groom' ? 'Sagar Suthar' : 'Dhrupti Mistry'}"></label><label class="f">UPI ID<input data-k="upi_id" value="${esc(c.upi_id)}" placeholder="name@okaxis"><small class="sub" style="margin:0;font-weight:400">GPay → Profile → UPI ID</small></label><label class="f">Amount buttons (₹, comma separated)<input data-k="amounts" value="${esc((c.amounts || [501, 1101, 2100, 5100, 11000]).join(', '))}"></label></div>
+        <div class="row" style="margin-top:.8rem;align-items:flex-start;gap:1rem">${c.qr_url ? `<img src="${esc(c.qr_url)}" alt="QR" data-qr style="width:120px;height:120px;object-fit:contain;background:#fff;border:1px solid var(--line);border-radius:12px;padding:6px">` : '<div data-qr class="empty" style="width:120px;height:120px;padding:0;display:grid;place-items:center;font-size:.8rem">No QR yet</div>'}
+          <div class="grid" style="gap:.5rem"><label class="btn sec small" style="cursor:pointer">Upload QR image<input type="file" accept="image/png,image/jpeg,image/webp" data-qrfile hidden></label>${c.qr_url ? '<button class="btn danger small" type="button" data-qrrm>Remove QR</button>' : ''}<small class="sub" style="margin:0">GPay → tap your photo → QR code → Share/Save</small></div></div>
+        <h3 style="font-size:.95rem;margin:1.2rem 0 .4rem">Online payment (Dodo Payments: cards, UPI, net banking, international)</h3>
+        <p class="sub" data-status style="margin:0 0 .6rem">Checking Dodo connection…</p>
+        <div class="form-grid"><label class="f">Dodo shagun product id<input data-k="product_id" value="${esc(d.product_id)}" placeholder="Created with the button below"></label></div>
+        <div class="row" style="margin-top:.6rem"><button class="btn sec small" type="button" data-create>Create shagun product in Dodo</button><label class="check"><input type="checkbox" data-k="dodo_enabled" ${d.enabled ? 'checked' : ''}>Offer online payment</label></div></div>`;
+    };
+    m.innerHTML = head('Shagun & payments', 'Guests can bless the couple with shagun through GPay/UPI or online payment. Each side has its own UPI, QR and Dodo account.', '<button class="btn" id="save-pay" type="button">Save payments</button>') + card('groom') + card('bride') +
+      `<div class="card"><h2>How the Dodo key is kept safe</h2><p class="sub" style="margin:0">The secret key is never in the website code. It lives in Vercel → Project → Settings → Environment Variables as <code>DODO_API_KEY_GROOM</code> and <code>DODO_API_KEY_BRIDE</code> (or one <code>DODO_API_KEY</code> for both). Each side's money goes to the Dodo account whose key is set for that side.</p></div>`;
+    const read = box => {
+      const v = k => box.querySelector(`[data-k="${k}"]`);
+      return { enabled: v('enabled').checked, payee: v('payee').value.trim(), upi_id: v('upi_id').value.trim(), qr_url: box.dataset.qr || null,
+        amounts: v('amounts').value.split(/[,\s]+/).map(Number).filter(n => n >= 11).slice(0, 8),
+        dodo: { enabled: v('dodo_enabled').checked && !!v('product_id').value.trim(), product_id: v('product_id').value.trim() || null } };
+    };
+    m.querySelectorAll('.card[data-side]').forEach(async box => {
+      const sd = box.dataset.side; box.dataset.qr = (pay[sd] || {}).qr_url || '';
+      box.querySelector('[data-qrfile]').onchange = async e => {
+        const f = e.target.files[0]; if (!f) return;
+        if (f.size > 5 * 1048576) return toast('QR image must be under 5 MB', 1);
+        toast('Uploading QR…');
+        const path = `qr/${sd}-${Date.now()}.${(f.name.split('.').pop() || 'png').toLowerCase()}`;
+        const { error } = await S.storage.from('wedding-gallery').upload(path, f, { contentType: f.type });
+        if (error) return toast(error.message, 1);
+        box.dataset.qr = S.storage.from('wedding-gallery').getPublicUrl(path).data.publicUrl;
+        const q = box.querySelector('[data-qr]'); q.outerHTML = `<img src="${esc(box.dataset.qr)}" alt="QR" data-qr style="width:120px;height:120px;object-fit:contain;background:#fff;border:1px solid var(--line);border-radius:12px;padding:6px">`;
+        toast('QR uploaded. Press Save payments.');
+      };
+      const rm = box.querySelector('[data-qrrm]'); if (rm) rm.onclick = () => { box.dataset.qr = ''; box.querySelector('[data-qr]').outerHTML = '<div data-qr class="empty" style="width:120px;height:120px;padding:0;display:grid;place-items:center;font-size:.8rem">Removed</div>'; rm.remove() };
+      const status = box.querySelector('[data-status]');
+      box.querySelector('[data-create]').onclick = async e => {
+        e.target.disabled = true; e.target.textContent = 'Creating…';
+        try { const j = await api({ side: sd, action: 'create', min: 11, suggested: 1101 }); box.querySelector('[data-k="product_id"]').value = j.product_id; box.querySelector('[data-k="dodo_enabled"]').checked = true; toast('Shagun product created in Dodo. Press Save payments.') }
+        catch (err) { toast(err.message, 1) }
+        e.target.disabled = false; e.target.textContent = 'Create shagun product in Dodo';
+      };
+      try {
+        const st = await api({ side: sd, action: 'status' });
+        status.innerHTML = st.configured ? `✅ Dodo connected (${st.mode} mode, key from <code>${esc(st.source)}</code>).` : '⚠️ No Dodo key for this side yet. Add <code>DODO_API_KEY_' + sd.toUpperCase() + '</code> (or <code>DODO_API_KEY</code>) in Vercel, then redeploy.';
+        box.querySelector('[data-create]').disabled = !st.configured;
+      } catch (err) { status.textContent = '⚠️ ' + (location.hostname === 'localhost' ? 'Payment functions run on Vercel only.' : err.message); box.querySelector('[data-create]').disabled = true }
+    });
+    $('save-pay').onclick = async e => {
+      const out = {};
+      for (const box of m.querySelectorAll('.card[data-side]')) {
+        const c = read(box);
+        if (c.upi_id && !/^[\w.\-]{2,}@[a-zA-Z]{2,}$/.test(c.upi_id)) return toast(`Check the UPI ID for ${SIDE[box.dataset.side]} (looks like name@okaxis)`, 1);
+        out[box.dataset.side] = c;
+      }
+      if (await saveSetting('payments', out, e.target)) show();
+    };
   },
 
   async gallery(m) {
