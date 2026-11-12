@@ -30,7 +30,7 @@ window.WEDDING = {
 
   /* Built-in sections and their default order. Admins can reorder or hide them and
    * add custom sections in between (public.site_sections, sort_order). */
-  layout: { blessing: 5, couple: 10, countdown: 20, events: 30, venue: 40, gallery: 50, rsvp: 60 }
+  layout: { blessing: 5, couple: 10, countdown: 20, events: 30, venue: 40, gallery: 50, shagun: 55, rsvp: 60 }
 };
 
 /* Normalise a ref code from a URL or record. Unknown codes fall back to the default. */

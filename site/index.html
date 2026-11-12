@@ -39,6 +39,7 @@ img,svg,iframe,canvas{max-width:100%;display:block}
 a{color:inherit}
 button,input,select,textarea{font:inherit;color:inherit}
 :focus-visible{outline:3px solid var(--haldi);outline-offset:3px;border-radius:4px}
+[hidden]{display:none!important}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 
 /* ───────── Gate: the sealed kankotri ───────── */
@@ -230,6 +231,25 @@ body[data-l=gu] .timeline h3{font-family:'Noto Serif Gujarati',serif;font-weight
 .gallery figure{margin:0 0 .9rem;break-inside:avoid;border-radius:14px;overflow:hidden;box-shadow:0 0 0 3px var(--haldi)}
 .gallery img{width:100%;height:auto}
 
+/* shagun */
+.sg-grid{display:grid;gap:1.2rem}
+.sg-card{position:relative;background:var(--card);border-radius:24px;padding:clamp(1.3rem,4vw,2rem);box-shadow:0 0 0 1px color-mix(in srgb,var(--haldi) 33%,transparent),0 30px 70px -30px color-mix(in srgb,var(--sindoor-deep) 33%,transparent)}
+.sg-amounts{display:flex;flex-wrap:wrap;gap:.5rem;justify-content:center;margin:.4rem 0 1rem}
+.sg-amounts button{min-height:46px;padding:.4rem 1.1rem;border-radius:999px;border:1.5px solid var(--line);background:#fff;font-weight:600;cursor:pointer;font-variant-numeric:tabular-nums}
+.sg-amounts button[aria-pressed=true]{background:var(--sindoor);border-color:var(--sindoor);color:var(--on-dark)}
+.sg-custom{display:none;max-width:220px;margin:0 auto 1rem}
+.sg-custom.show{display:block}
+.sg-actions{display:grid;gap:.7rem;justify-items:center}
+.sg-actions .btn{width:min(100%,360px)}
+.sg-qr{display:grid;justify-items:center;gap:.6rem;text-align:center}
+.sg-qr img{width:min(240px,70vw);aspect-ratio:1;object-fit:contain;background:#fff;border-radius:16px;padding:10px;box-shadow:0 0 0 3px var(--haldi)}
+.sg-upi{display:inline-flex;align-items:center;gap:.5rem;padding:.35rem .5rem .35rem .9rem;border-radius:999px;background:#fff;box-shadow:inset 0 0 0 1.5px var(--line);font-weight:600;max-width:100%}
+.sg-upi code{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sg-online{display:grid;gap:.8rem;margin-top:.4rem}
+.sg-online[hidden]{display:none}
+.sg-thanks{text-align:center}
+@media (min-width:760px){.sg-grid.two-col{grid-template-columns:1.1fr .9fr;align-items:start}}
+
 /* rsvp */
 #rsvp{background:var(--gulabi)}
 .card{position:relative;background:var(--card);border-radius:24px;padding:clamp(1.4rem,5vw,2.6rem);box-shadow:0 0 0 1px color-mix(in srgb,var(--haldi) 33%,transparent),0 30px 70px -30px color-mix(in srgb,var(--sindoor-deep) 33%,transparent)}
@@ -415,6 +435,42 @@ footer small{display:block;margin-top:1.4rem;opacity:.7;font-size:.85rem}
     <div class="inner wide"><h2 id="t-gallery"></h2><div class="gallery" id="gallery"></div></div>
   </section>
 
+  <section class="page" id="shagun" data-key="shagun" data-avail="0" hidden>
+    <div class="inner wide">
+      <svg class="motif" viewBox="0 0 120 24" aria-hidden="true"><path d="M0 12h44M76 12h44" stroke="currentColor"/><path d="M60 2c6 6 6 14 0 20c-6-6-6-14 0-20z" fill="currentColor"/><circle cx="48" cy="12" r="2.5" fill="currentColor"/><circle cx="72" cy="12" r="2.5" fill="currentColor"/></svg>
+      <h2 id="t-shagun"></h2>
+      <p class="lede" id="t-shagun-lede"></p>
+      <div class="sg-card sg-thanks" id="sg-thanks" hidden><svg class="diya" viewBox="0 0 70 60" aria-hidden="true"><path class="flame" d="M35 4c7 9 8 17 0 24c-8-7-7-15 0-24z" fill="#ff9e1b"/><path d="M6 34h58c-3 14-15 22-29 22S9 48 6 34z" style="fill:var(--sindoor)"/></svg><h3 id="t-sg-thanks" style="font:var(--display-style) var(--display-weight) 1.9rem/1.2 var(--display);color:var(--sindoor);margin:.4rem 0"></h3><p id="t-sg-thanks-p" style="margin:0"></p></div>
+      <div class="sg-grid" id="sg-grid">
+        <div class="sg-card">
+          <p class="legend" id="t-sg-amount" style="text-align:center;margin:0"></p>
+          <div class="sg-amounts" id="sg-amounts" role="group"></div>
+          <div class="sg-custom" id="sg-custom"><input type="number" inputmode="numeric" min="11" max="500000" id="sg-custom-in" aria-labelledby="t-sg-other" placeholder="₹"></div>
+          <div class="sg-actions">
+            <a class="btn" id="sg-upi-btn" hidden></a>
+            <p class="note" id="t-upi-note" hidden></p>
+            <button class="btn ghost" type="button" id="sg-online-btn" hidden></button>
+          </div>
+          <form class="sg-online" id="sg-online" hidden novalidate>
+            <label class="field"><span id="t-sg-name"></span><input type="text" name="sg_name" maxlength="80" autocomplete="name"></label>
+            <label class="field"><span id="t-sg-email"></span><input type="email" name="sg_email" maxlength="160" autocomplete="email"></label>
+            <label class="field"><span id="t-sg-msg"></span><input type="text" name="sg_msg" maxlength="300"></label>
+            <button class="btn" type="submit" id="sg-pay"></button>
+            <p class="note">Secured by Dodo Payments · UPI, cards, net banking</p>
+            <p id="sg-msg" class="note" role="status" style="color:var(--sindoor);font-weight:600"></p>
+          </form>
+          <span id="t-sg-other" class="sr"></span>
+        </div>
+        <div class="sg-card sg-qr" id="sg-qr" hidden>
+          <img id="sg-qr-img" alt="UPI QR code" loading="lazy">
+          <p class="note" id="t-sg-scan"></p>
+          <p style="margin:0;font-weight:600" id="sg-payee"></p>
+          <span class="sg-upi"><code id="sg-upi-id"></code><button class="btn ghost" type="button" id="sg-copy" style="min-height:36px;padding:.2rem .8rem;font-size:.85rem;box-shadow:none"></button></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <section class="page" id="rsvp" data-key="rsvp">
     <div class="inner">
       <h2 id="t-rsvp"></h2>
@@ -475,7 +531,7 @@ const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /* ───────── Copy in four languages ───────── */
 const I = {
-  en: { loc:'en-IN', lamps_k:'An auspicious beginning', lamps:'Lighting the lamps of blessing', lamps_sub:'With every diya, our two families come closer.', ev_cal:'Add to calendar', ev_map:'Map', bless:'॥ Shri Ganeshaya Namah ॥', open:'Tap to open your invitation', side_groom:"Groom's side", side_bride:"Bride's side", invited_by:'Invited by {n}', dear:'Dear {n},',
+  en: { loc:'en-IN', shagun:'Send your blessings', shagun_lede:'Your presence is our greatest gift. If you wish to bless us with shagun, you can send it here.', sg_amount:'Choose an amount', sg_other:'Other amount', upi_btn:'Pay with GPay / UPI app', upi_note:'Opens GPay, PhonePe or Paytm on your phone.', sg_scan:'Or scan this QR with any UPI app', copy_upi:'Copy UPI ID', copied:'Copied', online_btn:'Pay online (card / net banking)', sg_name:'Your name', sg_email:'Email for receipt (optional)', sg_msg:'Blessing message (optional)', sg_thanks:'Thank you for your blessings!', sg_thanks_p:'Your shagun has reached the family. 🙏', sg_paying:'Opening secure payment…', sg_err:'Online payment could not start. Please use UPI instead.', sg_pay:'Pay {a} online', lamps_k:'An auspicious beginning', lamps:'Lighting the lamps of blessing', lamps_sub:'With every diya, our two families come closer.', ev_cal:'Add to calendar', ev_map:'Map', bless:'॥ Shri Ganeshaya Namah ॥', open:'Tap to open your invitation', side_groom:"Groom's side", side_bride:"Bride's side", invited_by:'Invited by {n}', dear:'Dear {n},',
     invite:'With the blessings of our elders, we joyfully invite you to celebrate the wedding of', groom:'Sagar', bride:'Dhrupti', amp:'&',
     couple:'Two families, one celebration', couple_lede:'Your presence and blessings will make our day complete.', groomLbl:'The groom', brideLbl:'The bride',
     count:'Counting down to the pheras', d:'Days', h:'Hours', m:'Minutes', s:'Seconds', ics:'Save the date to my calendar',
@@ -490,7 +546,7 @@ const I = {
     wa:'Send on WhatsApp', again:'Edit my reply', chat:'Message us', who_groom:"Sagar's family", who_bride:"Dhrupti's family",
     foot_bless:'With love and blessings from both families', made:'We look forward to welcoming you.',
     wa_head:"RSVP · Sagar & Dhrupti's wedding", wa_name:'Name', wa_att:'Attendance', wa_guests:'Guests', wa_events:'Celebrations', wa_food:'Food', wa_msg:'Message', wa_hi:'Namaste! I have a question about the wedding.' },
-  gu: { loc:'gu-IN', lamps_k:'શુભ આરંભ', lamps:'આશીર્વાદના દીપ પ્રગટાવીએ', lamps_sub:'દરેક દીવા સાથે અમારા બે પરિવાર વધુ નજીક આવે છે.', ev_cal:'કૅલેન્ડરમાં ઉમેરો', ev_map:'નકશો', bless:'॥ શ્રી ગણેશાય નમઃ ॥', open:'આમંત્રણ ખોલવા અહીં સ્પર્શ કરો', side_groom:'વર પક્ષ', side_bride:'કન્યા પક્ષ', invited_by:'{n} તરફથી સ્નેહભર્યું આમંત્રણ', dear:'પ્રિય {n},',
+  gu: { loc:'gu-IN', shagun:'આશીર્વાદ / શગુન મોકલો', shagun_lede:'આપની હાજરી જ અમારી સૌથી મોટી ભેટ છે. જો આપ શગુન રૂપે આશીર્વાદ આપવા ઈચ્છો તો અહીંથી મોકલી શકો છો.', sg_amount:'રકમ પસંદ કરો', sg_other:'બીજી રકમ', upi_btn:'GPay / UPI એપથી ચૂકવો', upi_note:'ફોનમાં GPay, PhonePe અથવા Paytm ખુલશે.', sg_scan:'અથવા કોઈપણ UPI એપથી આ QR સ્કેન કરો', copy_upi:'UPI ID કૉપિ કરો', copied:'કૉપિ થયું', online_btn:'ઑનલાઇન ચૂકવો (કાર્ડ / નેટ બૅન્કિંગ)', sg_name:'આપનું નામ', sg_email:'રસીદ માટે ઈમેલ (વૈકલ્પિક)', sg_msg:'આશીર્વાદ સંદેશ (વૈકલ્પિક)', sg_thanks:'આપના આશીર્વાદ બદલ આભાર!', sg_thanks_p:'આપનું શગુન પરિવાર સુધી પહોંચી ગયું છે. 🙏', sg_paying:'સુરક્ષિત પેમેન્ટ ખુલી રહ્યું છે…', sg_err:'ઑનલાઇન પેમેન્ટ શરૂ ન થયું. કૃપા કરી UPI વાપરો.', sg_pay:'{a} ઑનલાઇન ચૂકવો', lamps_k:'શુભ આરંભ', lamps:'આશીર્વાદના દીપ પ્રગટાવીએ', lamps_sub:'દરેક દીવા સાથે અમારા બે પરિવાર વધુ નજીક આવે છે.', ev_cal:'કૅલેન્ડરમાં ઉમેરો', ev_map:'નકશો', bless:'॥ શ્રી ગણેશાય નમઃ ॥', open:'આમંત્રણ ખોલવા અહીં સ્પર્શ કરો', side_groom:'વર પક્ષ', side_bride:'કન્યા પક્ષ', invited_by:'{n} તરફથી સ્નેહભર્યું આમંત્રણ', dear:'પ્રિય {n},',
     invite:'વડીલોના આશીર્વાદ સાથે, આપને સહર્ષ લગ્નોત્સવમાં પધારવા આમંત્રણ', groom:'સાગર', bride:'ધ્રુપ્તિ', amp:'સંગ',
     couple:'બે પરિવાર, એક ઉત્સવ', couple_lede:'આપની હાજરી અને આશીર્વાદથી અમારો દિવસ પૂર્ણ થશે.', groomLbl:'વરરાજા', brideLbl:'કન્યા',
     count:'ફેરાને હવે બાકી', d:'દિવસ', h:'કલાક', m:'મિનિટ', s:'સેકન્ડ', ics:'તારીખ કૅલેન્ડરમાં સાચવો',
@@ -505,7 +561,7 @@ const I = {
     wa:'WhatsApp પર મોકલો', again:'જવાબ બદલો', chat:'સંદેશ મોકલો', who_groom:'સાગરના પરિવાર', who_bride:'ધ્રુપ્તિના પરિવાર',
     foot_bless:'બંને પરિવાર તરફથી સ્નેહ અને આશીર્વાદ', made:'આપના સ્વાગત માટે આતુર છીએ.',
     wa_head:'RSVP · સાગર અને ધ્રુપ્તિના લગ્ન', wa_name:'નામ', wa_att:'હાજરી', wa_guests:'મહેમાન', wa_events:'પ્રસંગો', wa_food:'ભોજન', wa_msg:'સંદેશ', wa_hi:'નમસ્તે! લગ્ન વિશે એક પ્રશ્ન છે.' },
-  hi: { loc:'hi-IN', lamps_k:'शुभ आरंभ', lamps:'आशीर्वाद के दीप जलाएँ', lamps_sub:'हर दीये के साथ हमारे दो परिवार और करीब आते हैं।', ev_cal:'कैलेंडर में जोड़ें', ev_map:'नक्शा', bless:'॥ श्री गणेशाय नमः ॥', open:'निमंत्रण खोलने के लिए यहाँ छुएँ', side_groom:'वर पक्ष', side_bride:'कन्या पक्ष', invited_by:'{n} की ओर से सप्रेम निमंत्रण', dear:'प्रिय {n},',
+  hi: { loc:'hi-IN', shagun:'आशीर्वाद / शगुन भेजें', shagun_lede:'आपकी उपस्थिति ही हमारा सबसे बड़ा उपहार है। यदि आप शगुन के रूप में आशीर्वाद देना चाहें तो यहाँ से भेज सकते हैं।', sg_amount:'राशि चुनें', sg_other:'अन्य राशि', upi_btn:'GPay / UPI ऐप से भुगतान करें', upi_note:'फ़ोन में GPay, PhonePe या Paytm खुलेगा।', sg_scan:'या किसी भी UPI ऐप से यह QR स्कैन करें', copy_upi:'UPI ID कॉपी करें', copied:'कॉपी हो गया', online_btn:'ऑनलाइन भुगतान (कार्ड / नेट बैंकिंग)', sg_name:'आपका नाम', sg_email:'रसीद के लिए ईमेल (वैकल्पिक)', sg_msg:'आशीर्वाद संदेश (वैकल्पिक)', sg_thanks:'आपके आशीर्वाद के लिए धन्यवाद!', sg_thanks_p:'आपका शगुन परिवार तक पहुँच गया है। 🙏', sg_paying:'सुरक्षित भुगतान खुल रहा है…', sg_err:'ऑनलाइन भुगतान शुरू नहीं हुआ। कृपया UPI का उपयोग करें।', sg_pay:'{a} ऑनलाइन भेजें', lamps_k:'शुभ आरंभ', lamps:'आशीर्वाद के दीप जलाएँ', lamps_sub:'हर दीये के साथ हमारे दो परिवार और करीब आते हैं।', ev_cal:'कैलेंडर में जोड़ें', ev_map:'नक्शा', bless:'॥ श्री गणेशाय नमः ॥', open:'निमंत्रण खोलने के लिए यहाँ छुएँ', side_groom:'वर पक्ष', side_bride:'कन्या पक्ष', invited_by:'{n} की ओर से सप्रेम निमंत्रण', dear:'प्रिय {n},',
     invite:'बड़ों के आशीर्वाद से, हम आपको सहर्ष विवाह उत्सव में आमंत्रित करते हैं', groom:'सागर', bride:'ध्रुप्ति', amp:'संग',
     couple:'दो परिवार, एक उत्सव', couple_lede:'आपकी उपस्थिति और आशीर्वाद से हमारा दिन पूरा होगा।', groomLbl:'दूल्हा', brideLbl:'दुल्हन',
     count:'फेरों में अब बाकी', d:'दिन', h:'घंटे', m:'मिनट', s:'सेकंड', ics:'तारीख कैलेंडर में सेव करें',
@@ -520,7 +576,7 @@ const I = {
     wa:'WhatsApp पर भेजें', again:'जवाब बदलें', chat:'संदेश भेजें', who_groom:'सागर के परिवार', who_bride:'ध्रुप्ति के परिवार',
     foot_bless:'दोनों परिवारों की ओर से स्नेह और आशीर्वाद', made:'आपके स्वागत की प्रतीक्षा है।',
     wa_head:'RSVP · सागर और ध्रुप्ति का विवाह', wa_name:'नाम', wa_att:'उपस्थिति', wa_guests:'मेहमान', wa_events:'कार्यक्रम', wa_food:'भोजन', wa_msg:'संदेश', wa_hi:'नमस्ते! विवाह के बारे में एक सवाल है।' },
-  mr: { loc:'mr-IN', lamps_k:'शुभारंभ', lamps:'आशीर्वादाचे दीप उजळूया', lamps_sub:'प्रत्येक दिव्यासोबत आमची दोन कुटुंबे अधिक जवळ येतात.', ev_cal:'कॅलेंडरमध्ये जोडा', ev_map:'नकाशा', bless:'॥ श्री गणेशाय नमः ॥', open:'निमंत्रण उघडण्यासाठी येथे स्पर्श करा', side_groom:'वर पक्ष', side_bride:'वधू पक्ष', invited_by:'{n} यांच्याकडून सप्रेम निमंत्रण', dear:'प्रिय {n},',
+  mr: { loc:'mr-IN', shagun:'आशीर्वाद / शगुन पाठवा', shagun_lede:'आपली उपस्थिती हीच आमच्यासाठी सर्वात मोठी भेट आहे. शगुन रूपाने आशीर्वाद द्यायचा असल्यास येथून पाठवू शकता.', sg_amount:'रक्कम निवडा', sg_other:'इतर रक्कम', upi_btn:'GPay / UPI ॲपने पैसे द्या', upi_note:'फोनमध्ये GPay, PhonePe किंवा Paytm उघडेल.', sg_scan:'किंवा कोणत्याही UPI ॲपने हा QR स्कॅन करा', copy_upi:'UPI ID कॉपी करा', copied:'कॉपी झाले', online_btn:'ऑनलाइन पैसे द्या (कार्ड / नेट बँकिंग)', sg_name:'आपले नाव', sg_email:'पावतीसाठी ईमेल (ऐच्छिक)', sg_msg:'आशीर्वाद संदेश (ऐच्छिक)', sg_thanks:'आपल्या आशीर्वादासाठी धन्यवाद!', sg_thanks_p:'आपले शगुन कुटुंबापर्यंत पोहोचले आहे. 🙏', sg_paying:'सुरक्षित पेमेंट उघडत आहे…', sg_err:'ऑनलाइन पेमेंट सुरू झाले नाही. कृपया UPI वापरा.', sg_pay:'{a} ऑनलाइन पाठवा', lamps_k:'शुभारंभ', lamps:'आशीर्वादाचे दीप उजळूया', lamps_sub:'प्रत्येक दिव्यासोबत आमची दोन कुटुंबे अधिक जवळ येतात.', ev_cal:'कॅलेंडरमध्ये जोडा', ev_map:'नकाशा', bless:'॥ श्री गणेशाय नमः ॥', open:'निमंत्रण उघडण्यासाठी येथे स्पर्श करा', side_groom:'वर पक्ष', side_bride:'वधू पक्ष', invited_by:'{n} यांच्याकडून सप्रेम निमंत्रण', dear:'प्रिय {n},',
     invite:'वडीलधाऱ्यांच्या आशीर्वादाने, आम्ही आपल्याला सहर्ष विवाह सोहळ्यास आमंत्रित करतो', groom:'सागर', bride:'ध्रुप्ति', amp:'संग',
     couple:'दोन कुटुंबे, एक सोहळा', couple_lede:'आपली उपस्थिती आणि आशीर्वाद आमचा दिवस पूर्ण करतील.', groomLbl:'नवरदेव', brideLbl:'नवरी',
     count:'फेऱ्यांना आता बाकी', d:'दिवस', h:'तास', m:'मिनिटे', s:'सेकंद', ics:'तारीख कॅलेंडरमध्ये जतन करा',
@@ -652,6 +708,7 @@ function draw() {
   $('v-map').innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg>' + esc(T('map'));
   set('t-gallery', 'gallery');
 
+  drawShagun();
   set('t-rsvp', 'rsvp'); set('t-rsvp-lede', 'rsvp_lede');
   ['name', 'phone', 'email', 'diet', 'note', 'guests', 'which', 'consent'].forEach(k => set('l-' + k, k)); set('l-att', 'att');
   const who = refInfo().display_name || T(isBrideSide() ? 'who_bride' : 'who_groom');
@@ -717,7 +774,8 @@ function renderSections() {
   main.querySelectorAll('section[data-key]').forEach(el => {
     const k = el.dataset.key, conf = lay[k] || {};
     const order = typeof conf === 'number' ? conf : (conf.order ?? C.layout[k] ?? 99);
-    if (k !== 'gallery') el.hidden = !!conf.hidden;
+    if (el.dataset.avail !== undefined) el.hidden = !!conf.hidden || el.dataset.avail !== '1';
+    else if (k !== 'gallery') el.hidden = !!conf.hidden;
     items.push([order, el]);
   });
   for (const sct of sections) {
@@ -737,6 +795,65 @@ function renderSections() {
   }
   items.sort((a, b) => a[0] - b[0]).forEach(([, el]) => main.appendChild(el));
 }
+
+/* ───────── Shagun: UPI (GPay/PhonePe) + online checkout per side ───────── */
+let sgAmount = null, sgOther = false;
+const sgConf = () => ((settings.payments || {})[side()]) || {};
+const inr = n => '₹' + Number(n).toLocaleString('en-IN');
+function upiLink(c, amt) {
+  const u = new URLSearchParams({ pa: c.upi_id, pn: c.payee || 'Shagun', cu: 'INR', tn: 'Shagun - Sagar & Dhrupti' });
+  if (amt) u.set('am', String(amt));
+  return 'upi://pay?' + u.toString().replace(/\+/g, '%20');
+}
+function drawShagun() {
+  const c = sgConf(), sec = $('shagun');
+  const hasUpi = !!(c.upi_id && /@/.test(c.upi_id)), hasQr = !!c.qr_url, hasOnline = !!(c.dodo && c.dodo.enabled && c.dodo.product_id);
+  sec.dataset.avail = c.enabled && (hasUpi || hasQr || hasOnline) ? '1' : '0';
+  if (sec.dataset.avail !== '1') { sec.hidden = true; return }
+  sec.hidden = !!((settings.layout || {}).shagun || {}).hidden;
+  ['shagun', 'shagun_lede', 'sg_amount', 'sg_scan', 'sg_name', 'sg_email', 'sg_msg', 'sg_thanks', 'sg_thanks_p', 'upi_note', 'sg_other'].forEach(k => { const el = $('t-' + k.replace(/_/g, '-')); if (el) el.textContent = T(k) });
+  const amounts = (Array.isArray(c.amounts) && c.amounts.length ? c.amounts : [501, 1101, 2100, 5100, 11000]).map(Number).filter(n => n > 0);
+  if (sgAmount === null && !sgOther) sgAmount = amounts[1] || amounts[0];
+  $('sg-amounts').innerHTML = amounts.map(a => `<button type="button" data-amt="${a}" aria-pressed="${!sgOther && sgAmount === a}">${inr(a)}</button>`).join('') + `<button type="button" data-amt="other" aria-pressed="${sgOther}">${esc(T('sg_other'))}</button>`;
+  $('sg-custom').classList.toggle('show', sgOther);
+  const amt = sgOther ? Math.round(Number($('sg-custom-in').value) || 0) : sgAmount;
+  $('sg-upi-btn').hidden = !hasUpi; $('t-upi-note').hidden = !hasUpi;
+  if (hasUpi) { $('sg-upi-btn').href = upiLink(c, amt || ''); $('sg-upi-btn').textContent = T('upi_btn') + (amt ? ' · ' + inr(amt) : '') }
+  $('sg-online-btn').hidden = !hasOnline || !$('sg-online').hidden; $('sg-online-btn').textContent = T('online_btn');
+  if (!hasOnline) $('sg-online').hidden = true;
+  $('sg-pay').textContent = T('sg_pay', { a: amt ? inr(amt) : '' });
+  $('sg-qr').hidden = !(hasQr || hasUpi);
+  $('sg-grid').classList.toggle('two-col', !$('sg-qr').hidden);
+  if (hasQr) { $('sg-qr-img').src = c.qr_url; $('sg-qr-img').hidden = false } else $('sg-qr-img').hidden = true;
+  $('sg-payee').textContent = c.payee || ''; $('sg-upi-id').textContent = c.upi_id || '';
+  $('sg-upi-id').parentElement.hidden = !hasUpi; $('sg-copy').textContent = T('copy_upi');
+  $('t-sg-scan').hidden = !hasQr;
+  const thanks = qs.get('shagun') === 'thanks';
+  $('sg-thanks').hidden = !thanks;
+}
+$('sg-amounts').addEventListener('click', e => {
+  const b = e.target.closest('[data-amt]'); if (!b) return;
+  if (b.dataset.amt === 'other') { sgOther = true; setTimeout(() => $('sg-custom-in').focus(), 0) } else { sgOther = false; sgAmount = Number(b.dataset.amt) }
+  drawShagun();
+});
+$('sg-custom-in').addEventListener('input', () => drawShagun());
+$('sg-copy').addEventListener('click', async () => { try { await navigator.clipboard.writeText(sgConf().upi_id || ''); $('sg-copy').textContent = T('copied'); setTimeout(() => $('sg-copy').textContent = T('copy_upi'), 1600) } catch {} });
+$('sg-online-btn').addEventListener('click', () => { $('sg-online').hidden = false; $('sg-online-btn').hidden = true; const f = $('sg-online'); if (!f.sg_name.value) f.sg_name.value = $('f').guest_name.value || guestName || ''; f.sg_name.focus() });
+$('sg-online').addEventListener('submit', async e => {
+  e.preventDefault();
+  const f = e.target, msg = $('sg-msg'); msg.textContent = '';
+  const amt = sgOther ? Math.round(Number($('sg-custom-in').value) || 0) : sgAmount;
+  if (!amt || amt < 11) { msg.textContent = T('sg_amount'); return }
+  if (f.sg_name.value.trim().length < 2) { msg.textContent = T('name_err'); f.sg_name.focus(); return }
+  $('sg-pay').disabled = true; $('sg-pay').textContent = T('sg_paying');
+  try {
+    const r = await fetch('/api/shagun-checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ side: side(), amount: amt, name: f.sg_name.value.trim(), email: f.sg_email.value.trim(), message: f.sg_msg.value.trim(), ref, lang: L }) });
+    const j = await r.json().catch(() => ({}));
+    if (r.ok && j.url) { location.href = j.url; return }
+    msg.textContent = j.error || T('sg_err');
+  } catch { msg.textContent = T('sg_err') }
+  $('sg-pay').disabled = false; drawShagun();
+});
 
 /* language switcher */
 const nav = document.querySelector('.lang');
